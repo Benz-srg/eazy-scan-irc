@@ -1,0 +1,66 @@
+# Full-stack EazyScan: web + local Whisper + MongoDB.
+#
+#   docker compose up            # mongo only (for local `pnpm dev` with Claude CLI)
+#   docker compose --profile full up --build   # everything (web + whisper + mongo)
+#
+# NOTE: the Claude Code CLI uses your host login and cannot run inside a
+# container, so the dockerized web service uses OpenAI for analysis.
+# Set OPENAI_API_KEY in your environment (or .env) before `--profile full`.
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: eazyscan-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    # Prisma requires a replica set (for transactions). Single-node rs0.
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      # initiate the replica set once, then report healthy
+      test: >
+        mongosh --quiet --eval "
+          try { rs.status().ok }
+          catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok }
+        "
+      interval: 5s
+      timeout: 10s
+      retries: 12
+      start_period: 5s
+
+  whisper:
+    build: ./python
+    container_name: eazyscan-whisper
+    profiles: ["full"]
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      WHISPER_MODEL: ${WHISPER_MODEL:-large-v3}
+    volumes:
+      - whisper_cache:/root/.cache/huggingface
+
+  web:
+    build: .
+    container_name: eazyscan-web
+    profiles: ["full"]
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      # Claude CLI can't run in a container → use OpenAI for analysis here.
+      LLM_PROVIDER: openai
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_ANALYSIS_MODEL: ${OPENAI_ANALYSIS_MODEL:-gpt-4o-mini}
+      OPENAI_STT_MODEL: ${OPENAI_STT_MODEL:-whisper-1}
+      PYTHON_WHISPER_URL: http://whisper:8000
+      DATABASE_URL: mongodb://mongo:27017/eazyscan?replicaSet=rs0&directConnection=true
+
+volumes:
+  mongo_data:
+  whisper_cache:

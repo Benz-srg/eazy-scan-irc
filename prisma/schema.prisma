@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  client     String
+  audioName  String
+  audioPath  String?
+  transcript String?
+  confidence Int      @default(0)
+  mandayMin  Int      @default(0)
+  mandayMax  Int      @default(0)
+  features   Int      @default(0)
+  tag        String   @default("Project")
+  analysis   Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

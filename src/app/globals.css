@@ -1,0 +1,229 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f5f6fb;
+  --bg-2: #eef0f9;
+  --surface: #ffffff;
+  --surface-2: #fafbff;
+  --ink: #171723;
+  --ink-2: #3d3d52;
+  --muted: #6f6f86;
+  --faint: #9a9ab0;
+  --line: #e9e9f1;
+  --line-2: #f1f1f7;
+  --brand: #6366f1;
+  --brand-ink: #4f46e5;
+  --brand-2: #60a5fa;
+  --brand-soft: #eef0fe;
+  --brand-soft-2: #eaf3ff;
+  --grad: linear-gradient(135deg, #6366f1 0%, #7385f4 45%, #60a5fa 100%);
+  --grad-soft: linear-gradient(135deg, #eef0fe 0%, #eaf3ff 100%);
+  --green: #10b981;
+  --green-soft: #e7f8f1;
+  --amber: #f59e0b;
+  --amber-soft: #fef4e2;
+  --rose: #f43f5e;
+  --rose-soft: #feecef;
+  --sky: #0ea5e9;
+  --violet: #8b5cf6;
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --sh-sm: 0 1px 2px rgba(23, 23, 35, 0.05), 0 1px 3px rgba(23, 23, 35, 0.04);
+  --sh-md: 0 4px 14px rgba(60, 60, 110, 0.07), 0 2px 5px rgba(60, 60, 110, 0.05);
+  --sh-lg: 0 18px 48px rgba(60, 60, 120, 0.12), 0 6px 16px rgba(60, 60, 120, 0.07);
+  --sh-glow: 0 0 0 6px rgba(99, 102, 241, 0.1), 0 14px 40px rgba(99, 102, 241, 0.3);
+  --maxw: 1180px;
+
+  /* semantic z-index scale */
+  --z-dropdown: 20;
+  --z-sticky: 50;
+  --z-modal-backdrop: 100;
+  --z-modal: 101;
+  --z-toast: 120;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-thai), system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+  letter-spacing: -0.003em;
+  overflow-x: hidden;
+}
+
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.18);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+.ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  line-height: 0;
+}
+
+.ic svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* scrollbar */
+*::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #d9d9e6;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #c5c5d6;
+  background-clip: content-box;
+}
+
+/* shared anim */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: -300% 0;
+  }
+  100% {
+    background-position: 300% 0;
+  }
+}
+@keyframes pulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.fadeUp {
+  animation: fadeUp 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* focus */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .fadeUp {
+    animation: fadeIn 0.001ms both;
+  }
+}
