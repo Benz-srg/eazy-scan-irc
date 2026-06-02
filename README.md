@@ -110,9 +110,10 @@ pnpm install && pnpm dev
 > และเครื่องมี **Claude Code CLI** ติดตั้ง+ล็อกอินอยู่ → ระบบจะใช้ CLI ให้อัตโนมัติ (ฟรี)
 > แทนที่จะ error. (ใน Docker ไม่มี CLI → ไม่ fallback)
 
-**ความละเอียด (เร็ว/ละเอียด)** เลือกในแอป (Workspace หรือเมนูตั้งค่า):
-- **เร็ว** = Haiku/Flash/gpt-4o-mini (ไวกว่า ~2 เท่า, default)
-- **ละเอียด** = Sonnet/Pro/gpt-4o (วิเคราะห์ลึกกว่า)
+**ความละเอียด (depth)** เป็นค่าฝั่งเซิร์ฟเวอร์ (ผู้ใช้ไม่ต้องเลือก — UI ให้เลือกแค่ STT):
+- ดีฟอลต์ **fast** = Haiku / Flash / gpt-4o-mini (ไวกว่า ~2 เท่า)
+- **deep** = Sonnet / Pro / gpt-4o (ลึกกว่า) — ตั้ง model ต่อ provider ผ่าน env เช่น
+  `CLAUDE_CLI_DEEP_MODEL`, `ANTHROPIC_ANALYSIS_MODEL`, `GEMINI_ANALYSIS_MODEL`, `OPENAI_ANALYSIS_MODEL`
 
 ### การเชื่อม Claude Code CLI
 
@@ -224,7 +225,7 @@ pnpm typecheck      # tsc --noEmit
 
 ## Screens
 
-`/` Landing (SSR + SEO) · `/workspace` อัด/อัปโหลด + เลือก provider/depth ·
+`/` Landing (SSR + SEO) · `/workspace` อัด/อัปโหลด + เลือก STT provider ·
 `/processing` stepper จริง · `/results/[id]` ผลวิเคราะห์ + export + ดาวน์โหลดเสียง ·
 `/history` คลังเอกสาร ค้นหา/กรอง/เล่นเสียง
 

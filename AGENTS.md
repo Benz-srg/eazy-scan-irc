@@ -27,8 +27,8 @@ AI Manday Estimator. Built faithfully from a Claude Design handoff (EazyScan.htm
 | Types + Zod schema | `src/lib/types.ts` |
 | Sample data | `src/lib/sample-data.ts` |
 | Server pipeline | `src/lib/server/{transcribe,analyze,analyze-claude,prompt,storage,export,db}.ts` |
-| API | `src/app/api/{analyze,audio,export,projects}` |
-| Client state (jotai) | `src/lib/atoms.ts` (apiKey, provider, depth — persisted) |
+| API | `src/app/api/{analyze,reanalyze,audio,export,projects}` |
+| Client state (jotai) | `src/lib/atoms.ts` (apiKey, STT provider — persisted localStorage) |
 | Knowledge (RAG) | `CONTEXT.md`, `SKILLS.md` |
 
 ## LLM providers
@@ -37,7 +37,10 @@ AI Manday Estimator. Built faithfully from a Claude Design handoff (EazyScan.htm
   `anthropic` · `gemini` · `openai` (all via AI SDK `generateObject`).
 - Claude CLI (`analyze-claude.ts`) shells `claude -p --output-format json`, extracts the JSON
   from `result`, then validates with Zod. It CANNOT run inside Docker (host auth) — Docker uses OpenAI.
-- Depth: `fast` (Haiku/Flash/4o-mini, default) vs `deep` (Sonnet/Pro/4o). Same prompt+schema for all.
+- Auto-fallback: an API provider with no key, on a host that has the Claude CLI, uses the CLI.
+- Depth is server-side (default `fast`; the UI exposes only STT choice): `fast`
+  (Haiku/Flash/4o-mini) vs `deep` (Sonnet/Pro/4o), per-provider models via env. Same prompt+schema.
+- Users pick only the STT provider (Local Whisper vs OpenAI Whisper) in the UI.
 
 ## Invariants
 
