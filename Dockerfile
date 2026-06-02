@@ -2,6 +2,10 @@
 FROM node:22-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
+# reproducible builds trust their own committed lockfile, so disable pnpm's
+# minimum-release-age supply-chain gate (newer pnpm defaults it to ~24h and
+# would reject freshly published deps). packageManager pins the exact pnpm.
+ENV npm_config_minimum_release_age=0
 RUN corepack enable
 WORKDIR /app
 
@@ -9,7 +13,7 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
 # skip the postinstall "prisma generate" until schema is present, then run it
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile --ignore-scripts --config.minimumReleaseAge=0
 RUN pnpm exec prisma generate
 
 FROM base AS build
