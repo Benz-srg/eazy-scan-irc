@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EazyScan — คู่มือติดตั้งและใช้งาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f5f6fb; --surface:#ffffff; --surface-2:#fafbff;
+    --ink:#171723; --ink-2:#3d3d52; --muted:#6f6f86; --faint:#9a9ab0;
+    --line:#e9e9f1; --line-2:#f1f1f7;
+    --brand:#6366f1; --brand-ink:#4f46e5; --brand-2:#60a5fa;
+    --brand-soft:#eef0fe; --green:#10b981; --green-soft:#e7f8f1;
+    --amber:#f59e0b; --amber-soft:#fef4e2; --rose:#f43f5e; --rose-soft:#feecef;
+    --grad:linear-gradient(135deg,#6366f1 0%,#7385f4 45%,#60a5fa 100%);
+    --grad-soft:linear-gradient(135deg,#eef0fe 0%,#eaf3ff 100%);
+    --sh-sm:0 1px 2px rgba(23,23,35,.05),0 1px 3px rgba(23,23,35,.04);
+    --sh-md:0 4px 14px rgba(60,60,110,.07),0 2px 5px rgba(60,60,110,.05);
+    --sh-lg:0 18px 48px rgba(60,60,120,.12),0 6px 16px rgba(60,60,120,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+  body{font-family:'Noto Sans Thai',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;letter-spacing:-.003em;}
+  .mono{font-family:'Noto Sans Mono',ui-monospace,monospace;letter-spacing:0;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px;}
+  a{color:var(--brand-ink);text-decoration:none;}
+  ::selection{background:rgba(99,102,241,.18);}
+
+  /* hero */
+  .hero{position:relative;overflow:hidden;text-align:center;padding:64px 22px 52px;}
+  .hero-glow{position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:760px;height:460px;
+    background:radial-gradient(ellipse at center,rgba(99,102,241,.16),transparent 62%);pointer-events:none;}
+  .logo{display:inline-flex;align-items:center;gap:13px;position:relative;}
+  .logo-mark{width:52px;height:52px;border-radius:17px;background:var(--grad);display:flex;align-items:center;
+    justify-content:center;gap:3.4px;box-shadow:0 8px 20px rgba(99,102,241,.4);}
+  .logo-mark span{width:3.4px;background:rgba(255,255,255,.96);border-radius:4px;}
+  .logo-text{font-size:30px;font-weight:800;letter-spacing:-.02em;}
+  .logo-text b{color:var(--brand-ink);font-weight:800;}
+  .hero h1{font-size:clamp(28px,5vw,42px);font-weight:800;line-height:1.18;letter-spacing:-.025em;margin:26px 0 0;text-wrap:balance;}
+  .hero p{font-size:clamp(15px,2.2vw,18px);color:var(--muted);max-width:580px;margin:16px auto 0;}
+  .badges{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:13.5px;
+    font-weight:600;background:var(--surface);border:1px solid var(--line);box-shadow:var(--sh-sm);color:var(--ink-2);}
+  .badge.free{background:var(--green-soft);color:#0a8a63;border-color:transparent;}
+  .badge.thai{background:var(--brand-soft);color:var(--brand-ink);border-color:transparent;}
+
+  section{padding:34px 0;}
+  .sec-eyebrow{font-size:13.5px;font-weight:700;color:var(--brand-ink);letter-spacing:.04em;margin-bottom:8px;}
+  h2{font-size:clamp(22px,3.4vw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.25;}
+  h2 .step-no{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:11px;
+    background:var(--grad);color:#fff;font-size:17px;font-weight:800;margin-right:11px;vertical-align:middle;box-shadow:0 6px 14px rgba(99,102,241,.3);}
+  h3{font-size:17px;font-weight:700;margin-bottom:4px;}
+  p.lead{color:var(--ink-2);margin-top:10px;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--sh-md);margin-top:18px;}
+  .card-soft{background:var(--grad-soft);border:1px solid var(--line);}
+
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin-top:20px;}
+  .flow-step{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:16px 14px;text-align:center;box-shadow:var(--sh-sm);}
+  .flow-ico{width:42px;height:42px;border-radius:12px;background:var(--grad-soft);color:var(--brand-ink);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+  .flow-step .t{font-size:14.5px;font-weight:700;}
+  .flow-step .d{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .flow-arrow{display:flex;align-items:center;color:var(--faint);font-size:20px;}
+
+  /* option cards */
+  .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:20px;}
+  .opt{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--sh-md);}
+  .opt.featured{border:2px solid var(--brand);box-shadow:var(--sh-lg);}
+  .opt .pin{position:absolute;top:-12px;left:22px;background:var(--grad);color:#fff;font-size:12px;font-weight:700;
+    padding:4px 12px;border-radius:999px;box-shadow:0 6px 14px rgba(99,102,241,.3);}
+  .opt .tag{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-block;margin-bottom:10px;}
+  .opt h3{font-size:18px;}
+  .opt ul{list-style:none;margin:12px 0 0;display:flex;flex-direction:column;gap:7px;}
+  .opt li{display:flex;gap:8px;font-size:14px;color:var(--ink-2);}
+  .opt li svg{flex:none;margin-top:3px;}
+
+  /* code box */
+  .code{position:relative;background:#1b1b2b;border-radius:14px;margin-top:14px;overflow:hidden;box-shadow:var(--sh-md);}
+  .code-head{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .code-head .dot{width:11px;height:11px;border-radius:99px;}
+  .code-head .label{margin-left:auto;font-size:12px;color:rgba(255,255,255,.45);}
+  .copy-btn{margin-left:10px;background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:8px;
+    padding:5px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;}
+  .copy-btn:hover{background:rgba(255,255,255,.2);}
+  .copy-btn.done{background:var(--green);}
+  pre{padding:16px 18px;overflow-x:auto;}
+  pre code{font-family:'Noto Sans Mono',ui-monospace,monospace;font-size:13.5px;color:#e7e7f5;line-height:1.85;white-space:pre;}
+  pre code .cmt{color:#7d7da0;}
+
+  /* callout */
+  .note{display:flex;gap:12px;border-radius:14px;padding:15px 17px;margin-top:16px;font-size:14.5px;line-height:1.65;}
+  .note svg{flex:none;margin-top:2px;}
+  .note.info{background:var(--brand-soft);color:var(--brand-ink);}
+  .note.ok{background:var(--green-soft);color:#0a7a57;}
+  .note.warn{background:var(--amber-soft);color:#9a6800;}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;background:var(--surface);
+    border-radius:14px;overflow:hidden;box-shadow:var(--sh-sm);}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-2);}
+  th{background:var(--surface-2);font-weight:700;font-size:13px;color:var(--ink-2);}
+  td:first-child{font-weight:600;}
+  tr:last-child td{border-bottom:none;}
+  .chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;}
+  .chip.free{background:var(--green-soft);color:#0a8a63;}
+  .chip.paid{background:var(--amber-soft);color:#9a6800;}
+
+  footer{text-align:center;padding:40px 22px 56px;color:var(--faint);font-size:13.5px;border-top:1px solid var(--line);margin-top:30px;}
+  hr{border:none;border-top:1px solid var(--line);margin:0;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="logo">
+    <div class="logo-mark" aria-hidden="true">
+      <span style="height:18px"></span><span style="height:30px"></span><span style="height:40px"></span>
+      <span style="height:22px"></span><span style="height:34px"></span><span style="height:15px"></span>
+    </div>
+    <div class="logo-text">Eazy<b>Scan</b></div>
+  </div>
+  <h1>เปลี่ยนเสียงลูกค้าให้เป็น<br />Scope งานและ Manday</h1>
+  <p>คู่มือติดตั้งและใช้งานแบบสเต็ปบายสเต็ป — Clone → รัน → ทดสอบ ภายในไม่กี่นาที</p>
+  <div class="badges">
+    <span class="badge thai">🇹🇭 Thai-first</span>
+    <span class="badge free">✨ ใช้ฟรีได้ ไม่ต้องมี API key</span>
+    <span class="badge">🎙️ Whisper + AI</span>
+    <span class="badge">📄 ส่งออก DOCX / PDF</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- overview -->
+  <section>
+    <div class="sec-eyebrow">ภาพรวม</div>
+    <h2>ระบบทำงานยังไง</h2>
+    <p class="lead">อัปโหลดหรืออัดเสียงคุยกับลูกค้า แล้ว AI จะถอดเสียง วิเคราะห์ และสรุปออกมาเป็นแผนงานพร้อมส่ง</p>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-ico">🎙️</div><div class="t">อัด/อัปโหลดเสียง</div><div class="d">.mp3 .wav .m4a</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-ico">📝</div><div class="t">ถอดเสียง</div><div class="d">Whisper (STT)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-ico">🧠</div><div class="t">วิเคราะห์ด้วย AI</div><div class="d">Claude / GPT / Gemini</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-ico">📊</div><div class="t">SOW + Manday</div><div class="d">+ ความเสี่ยง · คำถาม</div>
+      </div>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- choose -->
+  <section>
+    <div class="sec-eyebrow">เลือกวิธีติดตั้ง</div>
+    <h2>คุณเป็นแบบไหน?</h2>
+    <div class="opts">
+      <div class="opt">
+        <div class="tag" style="background:var(--brand-soft);color:var(--brand-ink)">แบบ A</div>
+        <h3>Docker คำสั่งเดียว</h3>
+        <ul>
+          <li>✓ ง่ายสุด ไม่ต้องลง Node/Python</li>
+          <li>✓ ได้ครบ web + STT + DB</li>
+          <li><span class="chip paid">ต้องมี API key</span></li>
+        </ul>
+      </div>
+      <div class="opt featured">
+        <div class="pin">⭐ แนะนำถ้าอยากฟรี</div>
+        <div class="tag" style="background:var(--green-soft);color:#0a8a63">แบบ B</div>
+        <h3>Local — ฟรี 100%</h3>
+        <ul>
+          <li>✓ Claude Code CLI วิเคราะห์ (ฟรี)</li>
+          <li>✓ Local Whisper ถอดเสียง (ฟรี)</li>
+          <li><span class="chip free">ไม่ต้องมี key</span></li>
+        </ul>
+      </div>
+      <div class="opt">
+        <div class="tag" style="background:var(--surface-2);color:var(--muted)">แบบ C</div>
+        <h3>เดโมอย่างเดียว</h3>
+        <ul>
+          <li>✓ ดูหน้าตา + ตัวอย่างผลลัพธ์</li>
+          <li>✓ ไม่ต้องตั้งอะไรเลย</li>
+          <li><span class="chip free">ฟรี (ข้อมูลตัวอย่าง)</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="note info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div><b>อยากใช้ฟรีไม่มี key?</b> เลือก <b>แบบ B</b> — ใช้ Claude Code CLI (ที่ล็อกอินบนเครื่อง) + Local Whisper ไม่แตะ OpenAI เลย<br />
+      <span style="color:var(--muted)">หมายเหตุ: Docker (แบบ A) ใช้ Claude CLI ไม่ได้ เพราะรันใน container ไม่ได้ → ต้องรัน local</span></div>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- step 1 clone -->
+  <section>
+    <div class="sec-eyebrow">ขั้นตอนที่ 1</div>
+    <h2><span class="step-no">1</span>Clone โปรเจกต์</h2>
+    <p class="lead">ดาวน์โหลดซอร์สโค้ดลงเครื่อง</p>
+    <div class="code">
+      <div class="code-head">
+        <span class="dot" style="background:#f1576a"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#28c840"></span>
+        <span class="label">terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">คัดลอก</button>
+      </div>
+      <pre><code>git clone https://github.com/Benz-srg/eazy-scan-irc.git
+cd eazy-scan-irc</code></pre>
+    </div>
+    <div class="note info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>
+      <div>ต้องมีอย่างใดอย่างหนึ่ง: <b>Docker Desktop</b> (แบบ A) หรือ <b>Node 20+ และ pnpm</b> (แบบ B/C)</div>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- step 2 run -->
+  <section>
+    <div class="sec-eyebrow">ขั้นตอนที่ 2</div>
+    <h2><span class="step-no">2</span>รันโปรเจกต์</h2>
+
+    <div class="card">
+      <h3>🅰️ แบบ A — Docker คำสั่งเดียว</h3>
+      <p style="color:var(--muted);font-size:14px;margin-top:4px">ได้ web + Whisper + MongoDB ครบ (ครั้งแรกโหลด Whisper model ~3GB รอสักครู่)</p>
+      <div class="code">
+        <div class="code-head">
+          <span class="dot" style="background:#f1576a"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#28c840"></span>
+          <span class="label">terminal</span>
+          <button class="copy-btn" onclick="copyCode(this)">คัดลอก</button>
+        </div>
+        <pre><code><span class="cmt"># 1) คัดลอกไฟล์ตั้งค่า แล้วใส่ API key 1 ตัวในไฟล์ .env</span>
+cp .env.example .env
+<span class="cmt"># เปิด .env แล้วใส่ เช่น OPENAI_API_KEY=sk-...</span>
+
+<span class="cmt"># 2) รันทั้งโปรเจกต์</span>
+docker compose up --build</code></pre>
+      </div>
+      <div class="note ok">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        <div>เปิด <a href="http://localhost:3000"><b>http://localhost:3000</b></a> — เสร็จ! · ใช้ key อื่นได้: ตั้ง <code class="mono">LLM_PROVIDER=anthropic</code> + <code class="mono">ANTHROPIC_API_KEY</code> (หรือ <code class="mono">gemini</code>) ใน .env</div>
+      </div>
+    </div>
+
+    <div class="card" style="border:2px solid var(--brand)">
+      <h3>🅱️ แบบ B — Local ฟรี 100% (มี Claude Code CLI)</h3>
+      <p style="color:var(--muted);font-size:14px;margin-top:4px">Claude CLI วิเคราะห์ + Local Whisper ถอดเสียง — ไม่ต้องมี API key</p>
+      <div class="code">
+        <div class="code-head">
+          <span class="dot" style="background:#f1576a"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#28c840"></span>
+          <span class="label">terminal</span>
+          <button class="copy-btn" onclick="copyCode(this)">คัดลอก</button>
+        </div>
+        <pre><code>pnpm install            <span class="cmt"># ติดตั้ง dependencies</span>
+pnpm whisper:setup      <span class="cmt"># ติดตั้ง Local Whisper (ครั้งแรกครั้งเดียว)</span>
+pnpm db:up              <span class="cmt"># MongoDB ผ่าน Docker (ข้ามได้ถ้าไม่ต้องการประวัติถาวร)</span>
+pnpm dev:all            <span class="cmt"># รัน web + Whisper พร้อมกัน</span></code></pre>
+      </div>
+      <p style="font-size:14px;margin-top:14px"><b>เชื่อม Claude Code CLI ก่อน (ครั้งเดียว):</b></p>
+      <div class="code">
+        <div class="code-head">
+          <span class="dot" style="background:#f1576a"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#28c840"></span>
+          <span class="label">terminal</span>
+          <button class="copy-btn" onclick="copyCode(this)">คัดลอก</button>
+        </div>
+        <pre><code>npm install -g @anthropic-ai/claude-code   <span class="cmt"># ติดตั้ง CLI</span>
+claude                                     <span class="cmt"># ล็อกอินผ่านเบราว์เซอร์</span>
+echo "hi" | claude -p --output-format json <span class="cmt"># เช็คว่าใช้ได้ (ต้องได้ JSON)</span></code></pre>
+      </div>
+      <div class="note ok">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        <div><b>Auto-connect:</b> ถ้าไม่ตั้งอะไรเลย ระบบใช้ Claude CLI ให้อัตโนมัติ · ถึงเผลอตั้ง provider เป็น OpenAI แต่ไม่มี key ก็ fallback มา CLI ให้</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🅲 แบบ C — เดโม (0 setup)</h3>
+      <div class="code">
+        <div class="code-head">
+          <span class="dot" style="background:#f1576a"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#28c840"></span>
+          <span class="label">terminal</span>
+          <button class="copy-btn" onclick="copyCode(this)">คัดลอก</button>
+        </div>
+        <pre><code>pnpm install && pnpm dev</code></pre>
+      </div>
+      <p style="font-size:14px;color:var(--muted);margin-top:12px">เปิด localhost:3000 → กดปุ่ม <b>"ดูตัวอย่าง"</b> ที่หน้าแรก เห็นผลวิเคราะห์ตัวอย่างทันที</p>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- step 3 test -->
+  <section>
+    <div class="sec-eyebrow">ขั้นตอนที่ 3</div>
+    <h2><span class="step-no">3</span>ทดสอบการใช้งาน</h2>
+    <p class="lead">ลองใช้งานจริงตามนี้ทีละขั้น</p>
+    <div class="card">
+      <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:12px;font-size:15px;">
+        <li>เปิด <a href="http://localhost:3000"><b>http://localhost:3000</b></a> → กด <b>"เริ่มใช้งานฟรี"</b></li>
+        <li>ที่หน้า <b>พื้นที่ทำงาน</b> → <b>อัดเสียง</b> หรือ <b>ลากไฟล์เสียง</b> มาวาง (.mp3 .wav .m4a)</li>
+        <li>เลือกบริการถอดเสียง (<b>Local Whisper</b> ฟรี หรือ <b>OpenAI Whisper</b> เร็วกว่า) และความละเอียด (เร็ว/ละเอียด)</li>
+        <li>กด <b>"วิเคราะห์ Requirement"</b> → ดูสเต็ปทำงานจริง พร้อมเวลาแต่ละขั้น</li>
+        <li>เห็นผล: สรุปผู้บริหาร · ฟีเจอร์ (SOW) · ตาราง Manday · ความเสี่ยง · คำถามที่ควรถามลูกค้า</li>
+        <li>กด <b>ส่งออก</b> เป็น DOCX / PDF · หรือ <b>วิเคราะห์ใหม่ด้วย AI อื่น</b> ถ้ายังไม่ถูกใจ</li>
+        <li>ไปหน้า <b>ประวัติการวิเคราะห์</b> → ค้นหา / เล่นเสียง / เปิดดูผลเก่า</li>
+      </ol>
+    </div>
+    <div class="note info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>
+      <div>ออกจากหน้าระหว่างประมวลผลได้ — งานรันต่อฝั่ง server แล้วโชว์ผลใน <b>ประวัติ</b> เมื่อกลับมา (ต้องเปิด MongoDB)</div>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- providers -->
+  <section>
+    <div class="sec-eyebrow">รายละเอียด</div>
+    <h2>เครื่องมือวิเคราะห์ (LLM)</h2>
+    <p class="lead">ตั้งผ่าน <code class="mono">LLM_PROVIDER</code> ใน .env — ทุกตัวใช้กฎ/คุณภาพชุดเดียวกัน</p>
+    <table>
+      <tr><th>Provider</th><th>ต้องมี</th><th>ค่าใช้จ่าย</th></tr>
+      <tr><td>claude-cli <span style="color:var(--faint);font-weight:400">(ดีฟอลต์ local)</span></td><td>Claude Code CLI ล็อกอิน</td><td><span class="chip free">ฟรี (ไม่ต้องมี key)</span></td></tr>
+      <tr><td>anthropic</td><td>ANTHROPIC_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
+      <tr><td>gemini</td><td>GEMINI_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
+      <tr><td>openai <span style="color:var(--faint);font-weight:400">(ดีฟอลต์ Docker)</span></td><td>OPENAI_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
+    </table>
+    <p style="font-size:13.5px;color:var(--muted);margin-top:12px">STT: <b>Local Whisper</b> (ฟรี, ในเครื่อง) หรือ <b>OpenAI Whisper</b> (เร็วกว่า, ใช้ key) — เลือกได้ในแอป</p>
+  </section>
+
+  <hr />
+
+  <!-- troubleshoot -->
+  <section>
+    <div class="sec-eyebrow">แก้ปัญหา</div>
+    <h2>เจอปัญหาบ่อย ๆ</h2>
+    <div class="card">
+      <h3 style="color:var(--rose)">Docker daemon ไม่ขึ้น / compose ค้าง</h3>
+      <p style="font-size:14px;color:var(--ink-2)">เปิด Docker Desktop ให้ whale icon เขียวนิ่งก่อน (อาจมี dialog ให้กดยอมรับ). ถ้าค้าง → Quit แล้วเปิดใหม่</p>
+      <h3 style="color:var(--amber);margin-top:18px">Local Whisper ช้า</h3>
+      <p style="font-size:14px;color:var(--ink-2)">large-v3 บน CPU ช้า (~60–210s/ไฟล์) แต่แม่นไทย. อยากเร็ว → เลือก <b>OpenAI Whisper</b> ในแอป (~15s)</p>
+      <h3 style="color:var(--brand-ink);margin-top:18px">วิเคราะห์ไม่ได้ / ขึ้น error</h3>
+      <p style="font-size:14px;color:var(--ink-2)">เช็คว่า <code class="mono">claude -p</code> ใช้ได้ (แบบ B) หรือใส่ API key ถูกต้อง (แบบ A). ถ้าไม่มีทั้งคู่ ระบบจะใช้ข้อมูลตัวอย่างแทน</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  EazyScan · AI Manday Estimator · สร้างตาม Claude Design handoff<br />
+  <span style="color:var(--brand-ink)">github.com/Benz-srg/eazy-scan-irc</span>
+</footer>
+
+<script>
+  function copyCode(btn){
+    const code = btn.closest('.code').querySelector('code');
+    const text = code.innerText;
+    navigator.clipboard.writeText(text).then(()=>{
+      const old = btn.textContent;
+      btn.textContent = '✓ คัดลอกแล้ว';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent = old; btn.classList.remove('done'); }, 1600);
+    }).catch(()=>{ btn.textContent = 'คัดลอกไม่ได้'; });
+  }
+</script>
+</body>
+</html>
