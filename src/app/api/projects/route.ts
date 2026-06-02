@@ -30,7 +30,10 @@ export async function GET() {
       tag: r.tag,
       status: r.status,
     }));
-    return NextResponse.json({ items });
+    return NextResponse.json(
+      { items },
+      { headers: { "cache-control": "no-store" } },
+    );
   } catch {
     return NextResponse.json({ items: [] });
   }

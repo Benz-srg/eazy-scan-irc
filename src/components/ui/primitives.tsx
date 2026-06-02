@@ -3,7 +3,6 @@
 import {
   useState,
   useEffect,
-  useRef,
   type CSSProperties,
   type ReactNode,
 } from "react";

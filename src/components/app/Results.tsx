@@ -17,6 +17,7 @@ import { TopBar } from "@/components/app/AppShell";
 import { PROMPTS } from "@/lib/sample-data";
 import { exportDoc } from "@/lib/export-client";
 import { apiKeyAtom, depthAtom } from "@/lib/atoms";
+import { invalidate } from "@/lib/swr";
 import { AnalysisSchema, type Analysis } from "@/lib/types";
 
 type Props = {
@@ -977,6 +978,7 @@ function ReanalyzeBar({
       const parsed = AnalysisSchema.safeParse(json.analysis);
       if (!parsed.success) throw new Error();
       onResult(parsed.data);
+      invalidate("projects"); // History reflects the re-analyzed result
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setErr(true);

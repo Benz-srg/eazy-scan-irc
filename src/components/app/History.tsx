@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { Icon, Btn, Card, Tag } from "@/components/ui/primitives";
 import { TopBar } from "@/components/app/AppShell";
 import { store, useStore } from "@/lib/store";
+import { useSWR, mutate, invalidate } from "@/lib/swr";
 import type { HistoryItem } from "@/lib/types";
+
+async function fetchProjects(): Promise<HistoryItem[]> {
+  const r = await fetch("/api/projects");
+  if (!r.ok) throw new Error("projects fetch failed");
+  const j = await r.json();
+  return (j?.items as HistoryItem[]) ?? [];
+}
 
 type Sort = "date" | "name" | "manday";
 
@@ -21,34 +29,23 @@ export function History() {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // hydrate from the DB when configured; DB is the source of truth if it has rows
+  // SWR: instant paint from cache, revalidate in background + on window focus.
+  // DB is the source of truth when it has rows; never wipe client-only history
+  // (no-DB mode → /api/projects returns []).
+  const { data: projects } = useSWR<HistoryItem[]>("projects", fetchProjects);
   useEffect(() => {
-    let active = true;
-    fetch("/api/projects")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => {
-        if (active && json?.items?.length) store.setHistory(json.items);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
+    if (projects?.length) store.setHistory(projects);
+  }, [projects]);
 
   // stop any playing preview audio when leaving the page
   useEffect(() => () => audioRef.current?.pause(), []);
 
-  // while any job is still processing, poll the DB so the list flips to done
+  // while any job is processing, force-revalidate so the list flips to done
   const hasProcessing = items.some((h) => h.status === "processing");
   useEffect(() => {
     if (!hasProcessing) return;
     const t = setInterval(() => {
-      fetch("/api/projects")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((json) => {
-          if (json?.items?.length) store.setHistory(json.items);
-        })
-        .catch(() => {});
+      mutate("projects", fetchProjects).catch(() => {});
     }, 4000);
     return () => clearInterval(t);
   }, [hasProcessing]);
@@ -477,7 +474,9 @@ export function History() {
                                 setMenuId(null);
                                 fetch(`/api/projects/${h.id}`, {
                                   method: "DELETE",
-                                }).catch(() => {});
+                                })
+                                  .catch(() => {})
+                                  .finally(() => invalidate("projects"));
                               }}
                               style={{
                                 display: "flex",

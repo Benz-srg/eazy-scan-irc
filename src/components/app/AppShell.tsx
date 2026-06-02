@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Icon, Logo, Btn } from "@/components/ui/primitives";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { ComingSoon } from "@/components/ui/ComingSoon";
@@ -119,6 +119,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const active = pathname.startsWith("/history") ? "history" : "workspace";
+
+  // warm the sibling routes so in-app navigation is instant
+  useEffect(() => {
+    router.prefetch("/workspace");
+    router.prefetch("/history");
+  }, [router]);
 
   const nav = [
     { id: "workspace", label: "พื้นที่ทำงาน", icon: "audio-lines", href: "/workspace" },

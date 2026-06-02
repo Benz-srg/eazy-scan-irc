@@ -6,6 +6,7 @@ import { Icon, Card, Tag } from "@/components/ui/primitives";
 import { TopBar } from "@/components/app/AppShell";
 import { store, useStore } from "@/lib/store";
 import { runAnalysis, type StageKey } from "@/lib/analyze-client";
+import { invalidate } from "@/lib/swr";
 import type { Analysis } from "@/lib/types";
 
 type StageDef = { key: StageKey; t: string; d: string; icon: string };
@@ -142,6 +143,7 @@ export function Processing() {
           features: a.features.length,
           tag: a.integrations[0]?.cat ?? "Project",
         });
+        invalidate("projects"); // fresh History after a new run
         setTimeout(() => router.push(`/results/${id}`), 700);
       })
       .catch(() => {

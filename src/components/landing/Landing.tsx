@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon, Logo, Btn, Card, Tag } from "@/components/ui/primitives";
 import { ComingSoon } from "@/components/ui/ComingSoon";
@@ -895,6 +895,9 @@ function Footer() {
 export default function Landing() {
   const router = useRouter();
   const [login, setLogin] = useState(false);
+  useEffect(() => {
+    router.prefetch("/workspace");
+  }, [router]);
   const onStart = () => router.push("/workspace");
   const onDemo = () => router.push("/results/sample");
   return (

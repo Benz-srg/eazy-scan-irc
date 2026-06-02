@@ -49,3 +49,6 @@ next-env.d.ts
 /python/__pycache__
 .playwright-mcp/
 ref-*.png
+
+# local session/config
+.claude/

@@ -13,15 +13,18 @@ export async function GET(
   try {
     const row = await db.project.findUnique({ where: { id } });
     if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
-    return NextResponse.json({
-      id: row.id,
-      status: row.status,
-      error: row.error,
-      analysis: row.analysis,
-      transcript: row.transcript,
-      audioUrl: row.audioPath ? `/api/audio/${row.audioPath}` : undefined,
-      audioName: row.audioName,
-    });
+    return NextResponse.json(
+      {
+        id: row.id,
+        status: row.status,
+        error: row.error,
+        analysis: row.analysis,
+        transcript: row.transcript,
+        audioUrl: row.audioPath ? `/api/audio/${row.audioPath}` : undefined,
+        audioName: row.audioName,
+      },
+      { headers: { "cache-control": "no-store" } },
+    );
   } catch {
     return NextResponse.json({ error: "error" }, { status: 500 });
   }
