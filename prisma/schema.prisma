@@ -14,12 +14,15 @@ model Project {
   audioName  String
   audioPath  String?
   transcript String?
+  // processing | done | error — created as "processing", finalized on completion
+  status     String   @default("done")
+  error      String?
   confidence Int      @default(0)
   mandayMin  Int      @default(0)
   mandayMax  Int      @default(0)
   features   Int      @default(0)
   tag        String   @default("Project")
-  analysis   Json
+  analysis   Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

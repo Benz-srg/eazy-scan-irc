@@ -28,6 +28,7 @@ export async function GET() {
       mandayMax: r.mandayMax,
       features: r.features,
       tag: r.tag,
+      status: r.status,
     }));
     return NextResponse.json({ items });
   } catch {

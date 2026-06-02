@@ -15,6 +15,8 @@ export async function GET(
     if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
     return NextResponse.json({
       id: row.id,
+      status: row.status,
+      error: row.error,
       analysis: row.analysis,
       transcript: row.transcript,
       audioUrl: row.audioPath ? `/api/audio/${row.audioPath}` : undefined,

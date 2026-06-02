@@ -79,6 +79,8 @@ export type Integration = z.infer<typeof IntegrationSchema>;
 export type Summary = z.infer<typeof SummarySchema>;
 export type Analysis = z.infer<typeof AnalysisSchema>;
 
+export type JobStatus = "processing" | "done" | "error";
+
 export type HistoryItem = {
   id: string;
   title: string;
@@ -90,4 +92,5 @@ export type HistoryItem = {
   mandayMax: number;
   features: number;
   tag: string;
+  status?: JobStatus;
 };

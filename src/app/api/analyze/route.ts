@@ -57,19 +57,56 @@ export async function POST(req: Request) {
           return;
         }
 
-        // 1. upload received
+        // 1. upload received — persist audio + create a "processing" record up
+        // front so it appears in History immediately and survives the user
+        // leaving the page (the compute below runs to completion regardless of
+        // whether the client stays connected).
+        const stored = await saveAudio(audio, filename);
+        const db = getDb();
+        let jobId = stored.id;
+        if (db) {
+          try {
+            const row = await db.project.create({
+              data: {
+                title: filename.replace(/\.[^.]+$/, ""),
+                client: "กำลังประมวลผล…",
+                audioName: filename,
+                audioPath: stored.filename,
+                status: "processing",
+                tag: "Processing",
+                analysis: undefined,
+              },
+            });
+            jobId = row.id;
+          } catch {
+            /* DB optional */
+          }
+        }
+        const markError = async (msg: string) => {
+          if (!db) return;
+          try {
+            await db.project.update({
+              where: { id: jobId },
+              data: { status: "error", error: msg.slice(0, 300) },
+            });
+          } catch {}
+        };
+        send({ type: "job", id: jobId, audioUrl: stored.url });
         send({ type: "stage", key: "upload", state: "done", ms: 0 });
 
         // 2. transcribe
         send({ type: "stage", key: "transcribe", state: "start" });
         const tStt = Date.now();
-        const transcript = await transcribe(audio, {
-          provider,
-          apiKey,
-          filename,
-        });
+        let transcript: string;
+        try {
+          transcript = await transcribe(audio, { provider, apiKey, filename });
+        } catch (e) {
+          await markError(e instanceof Error ? e.message : "ถอดเสียงไม่สำเร็จ");
+          throw e;
+        }
         const sttMs = Date.now() - tStt;
         if (!transcript?.trim()) {
+          await markError("ถอดเสียงไม่สำเร็จ (ข้อความว่าง)");
           fail("ถอดเสียงไม่สำเร็จ (ข้อความว่าง)");
           controller.close();
           return;
@@ -90,28 +127,32 @@ export async function POST(req: Request) {
         const llmApiKey = llmProvider === "openai" ? apiKey : undefined;
         send({ type: "stage", key: "analyze", state: "start" });
         const tLlm = Date.now();
-        const analysis = await analyzeTranscript(transcript, {
-          apiKey: llmApiKey,
-          depth,
-        });
+        let analysis;
+        try {
+          analysis = await analyzeTranscript(transcript, {
+            apiKey: llmApiKey,
+            depth,
+          });
+        } catch (e) {
+          await markError(e instanceof Error ? e.message : "วิเคราะห์ไม่สำเร็จ");
+          throw e;
+        }
         const llmMs = Date.now() - tLlm;
         send({ type: "stage", key: "analyze", state: "done", ms: llmMs });
 
-        // 4. finalize: persist audio + DB
+        // 4. finalize: mark the processing record done with the result
         send({ type: "stage", key: "finalize", state: "start" });
         const tFin = Date.now();
-        const stored = await saveAudio(audio, filename);
-        const db = getDb();
-        let id = stored.id;
         if (db) {
           try {
-            const row = await db.project.create({
+            await db.project.update({
+              where: { id: jobId },
               data: {
                 title: analysis.title,
                 client: analysis.client,
-                audioName: filename,
-                audioPath: stored.filename,
                 transcript,
+                status: "done",
+                error: null,
                 confidence: Math.round(analysis.confidence),
                 mandayMin: analysis.mandayMin,
                 mandayMax: analysis.mandayMax,
@@ -120,7 +161,6 @@ export async function POST(req: Request) {
                 analysis,
               },
             });
-            id = row.id;
           } catch {
             /* DB optional */
           }
@@ -134,7 +174,7 @@ export async function POST(req: Request) {
 
         send({
           type: "result",
-          id,
+          id: jobId,
           analysis,
           transcript,
           audioUrl: stored.url,

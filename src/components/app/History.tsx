@@ -38,6 +38,21 @@ export function History() {
   // stop any playing preview audio when leaving the page
   useEffect(() => () => audioRef.current?.pause(), []);
 
+  // while any job is still processing, poll the DB so the list flips to done
+  const hasProcessing = items.some((h) => h.status === "processing");
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const t = setInterval(() => {
+      fetch("/api/projects")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((json) => {
+          if (json?.items?.length) store.setHistory(json.items);
+        })
+        .catch(() => {});
+    }, 4000);
+    return () => clearInterval(t);
+  }, [hasProcessing]);
+
   const tags = useMemo(
     () => ["all", ...Array.from(new Set(items.map((h) => h.tag)))],
     [items],
@@ -227,8 +242,15 @@ export function History() {
                   key={h.id}
                   pad={18}
                   hover
-                  onClick={() => editId !== h.id && router.push(`/results/${h.id}`)}
-                  style={{ position: "relative" }}
+                  onClick={() =>
+                    editId !== h.id &&
+                    h.status !== "processing" &&
+                    router.push(`/results/${h.id}`)
+                  }
+                  style={{
+                    position: "relative",
+                    cursor: h.status === "processing" ? "default" : "pointer",
+                  }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                     <div
@@ -236,15 +258,29 @@ export function History() {
                         width: 50,
                         height: 50,
                         borderRadius: 14,
-                        background: "var(--grad-soft)",
-                        color: "var(--brand-ink)",
+                        background:
+                          h.status === "error"
+                            ? "var(--rose-soft)"
+                            : "var(--grad-soft)",
+                        color:
+                          h.status === "error" ? "var(--rose)" : "var(--brand-ink)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         flex: "none",
                       }}
                     >
-                      <Icon name="file-text" size={24} />
+                      <Icon
+                        name={
+                          h.status === "processing"
+                            ? "loader-circle"
+                            : h.status === "error"
+                              ? "triangle-alert"
+                              : "file-text"
+                        }
+                        size={24}
+                        className={h.status === "processing" ? "spin" : ""}
+                      />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       {editId === h.id ? (
@@ -325,21 +361,33 @@ export function History() {
                           <Icon name={playingId === h.id ? "pause" : "play"} size={16} />
                         </button>
                       )}
-                      <Tag size={12}>{h.tag}</Tag>
-                      <div style={{ textAlign: "right" }}>
-                        <div
-                          style={{
-                            fontSize: 16,
-                            fontWeight: 800,
-                            color: "var(--brand-ink)",
-                            whiteSpace: "nowrap",
-                          }}
-                          className="mono"
-                        >
-                          {h.mandayMin}–{h.mandayMax}
-                        </div>
-                        <div style={{ fontSize: 11, color: "var(--faint)" }}>Manday</div>
-                      </div>
+                      {h.status === "processing" ? (
+                        <Tag color="var(--brand-ink)" bg="var(--brand-soft)" icon="loader-circle" size={12}>
+                          กำลังประมวลผล
+                        </Tag>
+                      ) : h.status === "error" ? (
+                        <Tag color="var(--rose)" bg="var(--rose-soft)" icon="triangle-alert" size={12}>
+                          ผิดพลาด
+                        </Tag>
+                      ) : (
+                        <>
+                          <Tag size={12}>{h.tag}</Tag>
+                          <div style={{ textAlign: "right" }}>
+                            <div
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 800,
+                                color: "var(--brand-ink)",
+                                whiteSpace: "nowrap",
+                              }}
+                              className="mono"
+                            >
+                              {h.mandayMin}–{h.mandayMax}
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--faint)" }}>Manday</div>
+                          </div>
+                        </>
+                      )}
                       <div style={{ position: "relative" }}>
                         <button
                           onClick={(e) => {

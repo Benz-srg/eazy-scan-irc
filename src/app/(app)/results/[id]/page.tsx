@@ -41,25 +41,30 @@ export default function ResultsPage({
     fromSession ? session.transcript || undefined : undefined,
   );
 
-  // for DB-backed history items, hydrate the real record by id
+  // for DB-backed history items, hydrate the real record by id.
+  // if the job is still processing, poll until it finishes.
   useEffect(() => {
     if (id === "sample" || fromSession) return;
     let active = true;
-    fetch(`/api/projects/${id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => {
-        if (!active || !json) return;
-        const parsed = AnalysisSchema.safeParse(json.analysis);
-        if (parsed.success) {
-          setAnalysis(parsed.data);
+    let timer: ReturnType<typeof setTimeout>;
+    const load = () => {
+      fetch(`/api/projects/${id}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((json) => {
+          if (!active || !json) return;
           if (json.audioName) setAudioName(json.audioName);
           if (json.audioUrl) setAudioUrl(json.audioUrl);
           if (json.transcript) setTranscript(json.transcript);
-        }
-      })
-      .catch(() => {});
+          const parsed = AnalysisSchema.safeParse(json.analysis);
+          if (parsed.success) setAnalysis(parsed.data);
+          if (json.status === "processing") timer = setTimeout(load, 4000);
+        })
+        .catch(() => {});
+    };
+    load();
     return () => {
       active = false;
+      clearTimeout(timer);
     };
   }, [id, fromSession]);
 
