@@ -1,11 +1,16 @@
-# Full-stack EazyScan: web + local Whisper + MongoDB.
+# EazyScan — whole project in one command:
 #
-#   docker compose up            # mongo only (for local `pnpm dev` with Claude CLI)
-#   docker compose --profile full up --build   # everything (web + whisper + mongo)
+#   cp .env.example .env     # put ONE LLM key in it (OpenAI / Anthropic / Gemini)
+#   docker compose up --build
 #
-# NOTE: the Claude Code CLI uses your host login and cannot run inside a
-# container, so the dockerized web service uses OpenAI for analysis.
-# Set OPENAI_API_KEY in your environment (or .env) before `--profile full`.
+# Starts web (:3000) + local Whisper STT (:8000) + MongoDB. Compose auto-loads
+# the .env file in this folder. First run downloads the Whisper model (~3GB).
+#
+# NOTE: the Claude Code CLI uses your host login and cannot run in a container,
+# so the dockerized web service analyzes via an API key (default: OpenAI).
+# For the key-free Claude CLI path, run locally instead — see README ("Local dev").
+#
+# Local dev only need the database? -> `docker compose up -d mongo`
 
 services:
   mongo:
@@ -19,7 +24,6 @@ services:
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      # initiate the replica set once, then report healthy
       test: >
         mongosh --quiet --eval "
           try { rs.status().ok }
@@ -33,7 +37,6 @@ services:
   whisper:
     build: ./python
     container_name: eazyscan-whisper
-    profiles: ["full"]
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -45,7 +48,6 @@ services:
   web:
     build: .
     container_name: eazyscan-web
-    profiles: ["full"]
     restart: unless-stopped
     depends_on:
       mongo:
@@ -53,14 +55,20 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Claude CLI can't run in a container → use OpenAI for analysis here.
-      LLM_PROVIDER: openai
+      # analysis engine — default OpenAI (Claude CLI can't run in a container).
+      # set LLM_PROVIDER=anthropic|gemini|openai in .env + the matching key below.
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_ANALYSIS_MODEL: ${OPENAI_ANALYSIS_MODEL:-gpt-4o-mini}
       OPENAI_STT_MODEL: ${OPENAI_STT_MODEL:-whisper-1}
       PYTHON_WHISPER_URL: http://whisper:8000
       DATABASE_URL: mongodb://mongo:27017/eazyscan?replicaSet=rs0&directConnection=true
+    volumes:
+      - web_uploads:/app/uploads
 
 volumes:
   mongo_data:
   whisper_cache:
+  web_uploads:

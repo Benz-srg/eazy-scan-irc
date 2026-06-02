@@ -8,44 +8,46 @@
 
 ---
 
-## เริ่มเร็วที่สุด (เลือก 1 แบบ)
+## เริ่มใช้งาน
 
-### แบบ A — Docker เดียวจบ (ง่ายสุด, ต้องมี OpenAI key)
+ต้องมี **Docker Desktop** อย่างเดียว (แบบ A) หรือ **Node 20+ / pnpm** (แบบ B/C)
 
-ได้ครบทั้ง web + ถอดเสียง + ฐานข้อมูล ด้วยคำสั่งเดียว ไม่ต้องลง Node/Python เอง
+### ⭐ แบบ A — Docker คำสั่งเดียว จบทั้งโปรเจกต์ (ง่ายสุด)
 
-```bash
-cp .env.example .env            # ใส่ OPENAI_API_KEY=sk-... ในไฟล์
-export OPENAI_API_KEY=sk-...    # หรือ set ใน shell
-docker compose --profile full up --build
-```
-
-เปิด http://localhost:3000 — เสร็จ
-(ครั้งแรก Whisper จะโหลด model ~3GB, รอสักครู่)
-
-> Docker ใช้ **OpenAI** วิเคราะห์ เพราะ Claude Code CLI รันใน container ไม่ได้ (ดูแบบ B)
-
-### แบบ B — Local dev (ไม่ต้องใช้ API key เลย ถ้ามี Claude Code CLI)
-
-ใช้ **Claude Code CLI** วิเคราะห์ (ฟรี ใช้ล็อกอินเครื่องคุณ) + **Local Whisper** ถอดเสียง (ฟรี)
+ได้ครบ web + ถอดเสียง + ฐานข้อมูล ไม่ต้องลง Node/Python เอง:
 
 ```bash
-pnpm install                    # ติดตั้ง web + gen prisma
-pnpm whisper:setup              # ติดตั้ง Python Whisper (ครั้งเดียว)
-docker compose up -d mongo      # ฐานข้อมูล (ถ้าต้องการประวัติถาวร; ข้ามได้)
-pnpm dev:all                    # รัน web + whisper พร้อมกัน
+cp .env.example .env     # เปิดไฟล์ ใส่ API key 1 ตัว เช่น OPENAI_API_KEY=sk-...
+docker compose up --build
 ```
 
-เปิด http://localhost:3000 — ไม่ต้องมี API key ใด ๆ
-ดูวิธีต่อ Claude Code CLI ที่หัวข้อ [การเชื่อม Claude Code CLI](#การเชื่อม-claude-code-cli) ด้านล่าง
+เปิด **http://localhost:3000** — เสร็จ
+(ครั้งแรก Whisper โหลด model ~3GB รอสักครู่)
 
-### แบบ C — เดโมอย่างเดียว (ไม่ต้องตั้งอะไร)
+- ใช้ key อื่นได้: ตั้ง `LLM_PROVIDER=anthropic` + `ANTHROPIC_API_KEY=...` (หรือ `gemini` + `GEMINI_API_KEY`) ใน `.env`
+- Docker วิเคราะห์ด้วย API key เพราะ Claude Code CLI รันใน container ไม่ได้ (ถ้าอยากใช้ฟรีแบบไม่มี key → แบบ B)
+
+### แบบ B — Local dev (ไม่ต้องมี API key ถ้ามี Claude Code CLI)
+
+ใช้ **Claude Code CLI** วิเคราะห์ (ฟรี ใช้ล็อกอินเครื่อง) + **Local Whisper** ถอดเสียง (ฟรี):
+
+```bash
+pnpm install            # ติดตั้ง + gen prisma
+pnpm whisper:setup      # ติดตั้ง Python Whisper (ครั้งเดียว)
+pnpm db:up              # MongoDB ผ่าน Docker (ข้ามได้ถ้าไม่ต้องการประวัติถาวร)
+pnpm dev:all            # รัน web + whisper พร้อมกัน
+```
+
+เปิด http://localhost:3000 — ไม่ต้องมี key
+ตั้งค่า Claude CLI: ดู [การเชื่อม Claude Code CLI](#การเชื่อม-claude-code-cli)
+
+### แบบ C — เดโมอย่างเดียว (0 setup)
 
 ```bash
 pnpm install && pnpm dev
 ```
 
-กด "ดูตัวอย่าง" ที่หน้าแรก → เห็นผลวิเคราะห์ตัวอย่างทันที (ใช้ข้อมูล sample, ไม่เรียก AI จริง)
+กด "ดูตัวอย่าง" → เห็นผลวิเคราะห์ตัวอย่างทันที (ข้อมูล sample, ไม่เรียก AI)
 
 ---
 
@@ -143,12 +145,12 @@ Prisma + MongoDB · docx + pdf-lib (embedded Noto Sans Thai)
 ## Scripts
 
 ```bash
+pnpm docker         # ⭐ ทั้งโปรเจกต์ใน Docker (web + whisper + mongo)
 pnpm dev            # web เท่านั้น
 pnpm dev:all        # web + Local Whisper พร้อมกัน
 pnpm whisper:setup  # ติดตั้ง Python Whisper (ครั้งเดียว)
 pnpm db:up          # MongoDB (Docker) สำหรับ local dev
 pnpm db:push        # sync Prisma schema → MongoDB
-pnpm docker:up      # full stack (web + whisper + mongo) ใน Docker
 pnpm build          # production build
 pnpm typecheck      # tsc --noEmit
 ```
