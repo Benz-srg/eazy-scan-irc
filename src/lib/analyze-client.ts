@@ -13,8 +13,9 @@ export type StageEvent =
   | { type: "error"; message: string };
 
 export type AnalyzeOutcome = {
-  analysis: Analysis;
-  source: "api" | "sample";
+  analysis: Analysis | null;
+  source: "api" | "sample" | "error";
+  error?: string;
   audioUrl?: string;
   id?: string;
   transcript?: string;
@@ -31,8 +32,11 @@ type Session = {
 
 /**
  * Streams the real pipeline (NDJSON) and reports each stage via onStage so the
- * UI can follow actual progress + timing. Falls back to the bundled sample
- * when there is no audio or the backend/keys are unavailable.
+ * UI can follow actual progress + timing.
+ *
+ * The bundled sample is used ONLY for the explicit demo (no audio). When real
+ * audio is provided and the pipeline fails, we return an ERROR — never silently
+ * swap in unrelated mock data (that hid setup problems from the user).
  */
 export async function runAnalysis(
   session: Session,
@@ -110,8 +114,12 @@ export async function runAnalysis(
       transcript: r.transcript,
       timing: r.timing,
     };
-  } catch {
-    // graceful fallback — never block the UX on a missing backend/key
-    return { analysis: SAMPLE_ANALYSIS, source: "sample" };
+  } catch (err) {
+    // real audio failed → surface the error, do NOT fake a sample result
+    return {
+      analysis: null,
+      source: "error",
+      error: err instanceof Error ? err.message : "วิเคราะห์ไม่สำเร็จ",
+    };
   }
 }

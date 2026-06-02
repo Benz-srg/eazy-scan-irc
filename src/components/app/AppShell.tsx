@@ -195,10 +195,10 @@ function SidebarBody({
             fontSize: 14.5,
           }}
         >
-          <Icon name="sparkles" size={17} style={{ color: "var(--brand-ink)" }} /> โหมดเดโม
+          <Icon name="sparkles" size={17} style={{ color: "var(--brand-ink)" }} /> โหมด Demo
         </div>
         <div style={{ fontSize: 13, color: "var(--muted)", margin: "8px 0 4px", lineHeight: 1.55 }}>
-          ใช้งานได้ไม่จำกัด · ฟรีทุกฟีเจอร์ระหว่างเดโม
+          ใช้งานได้ไม่จำกัด · ฟรีทุกฟีเจอร์ระหว่าง demo
         </div>
       </div>
       <SettingsButton />

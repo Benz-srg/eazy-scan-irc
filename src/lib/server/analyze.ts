@@ -6,7 +6,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { AnalysisSchema, type Analysis } from "@/lib/types";
 import { buildSystemPrompt, buildUserPrompt } from "./prompt";
-import { analyzeWithClaudeCli, type Depth } from "./analyze-claude";
+import { analyzeWithClaudeCli, modelForDepth, type Depth } from "./analyze-claude";
 
 /** Is the Claude Code CLI installed + usable on this host? (cached) */
 let _cliOk: boolean | null = null;
@@ -73,15 +73,15 @@ function resolveSdkModel(
   provider: string,
   opts: AnalyzeOpts,
   deep: boolean,
-): LanguageModel {
+): { model: LanguageModel; id: string } {
   if (provider === "anthropic") {
     const apiKey = opts.apiKey || process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("missing ANTHROPIC_API_KEY");
     const anthropic = createAnthropic({ apiKey });
-    const m =
+    const id =
       process.env.ANTHROPIC_ANALYSIS_MODEL ||
       (deep ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001");
-    return anthropic(m);
+    return { model: anthropic(id), id };
   }
   if (provider === "gemini" || provider === "google") {
     const apiKey =
@@ -90,18 +90,18 @@ function resolveSdkModel(
       process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("missing GEMINI_API_KEY");
     const google = createGoogleGenerativeAI({ apiKey });
-    const m =
+    const id =
       process.env.GEMINI_ANALYSIS_MODEL ||
       (deep ? "gemini-2.5-pro" : "gemini-2.5-flash");
-    return google(m);
+    return { model: google(id), id };
   }
   // openai
   const apiKey = opts.apiKey || process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("missing OPENAI_API_KEY");
   const openai = createOpenAI({ apiKey });
-  const m =
+  const id =
     process.env.OPENAI_ANALYSIS_MODEL || (deep ? "gpt-4o" : "gpt-4o-mini");
-  return openai(m);
+  return { model: openai(id), id };
 }
 
 /**
@@ -122,21 +122,26 @@ export async function analyzeTranscript(
     process.env.LLM_PROVIDER ||
     "claude-cli"
   ).toLowerCase();
-  const deep = (opts.depth ?? "fast") === "deep";
+  const depth: Depth = opts.depth ?? "fast";
+  const deep = depth === "deep";
 
   // Auto-fallback: an API provider was chosen but has no key — if the local
   // Claude Code CLI is available, use it (free, host login) instead of failing.
   // (In Docker the CLI isn't present, so this correctly does not trigger.)
   if (provider !== "claude-cli" && !hasKey(provider, opts) && claudeCliAvailable()) {
     console.log(
-      `[analyze] ${provider} has no key — falling back to local Claude CLI`,
+      `[analyze] LLM provider=${provider} no key → fallback claude-cli · depth=${depth} · model=${modelForDepth(depth)}`,
     );
-    return analyzeWithClaudeCli(transcript, opts.depth ?? "fast");
+    return analyzeWithClaudeCli(transcript, depth);
   }
 
   if (provider === "claude-cli") {
-    return analyzeWithClaudeCli(transcript, opts.depth ?? "fast");
+    console.log(
+      `[analyze] LLM provider=claude-cli · depth=${depth} · model=${modelForDepth(depth)}`,
+    );
+    return analyzeWithClaudeCli(transcript, depth);
   }
-  const model = resolveSdkModel(provider, opts, deep);
+  const { model, id } = resolveSdkModel(provider, opts, deep);
+  console.log(`[analyze] LLM provider=${provider} · depth=${depth} · model=${id}`);
   return analyzeWithSdk(model, transcript);
 }

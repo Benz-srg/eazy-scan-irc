@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Icon, Card, Tag } from "@/components/ui/primitives";
+import { Icon, Card, Tag, Btn } from "@/components/ui/primitives";
 import { TopBar } from "@/components/app/AppShell";
 import { store, useStore } from "@/lib/store";
 import { runAnalysis, type StageKey } from "@/lib/analyze-client";
@@ -48,6 +48,7 @@ export function Processing() {
   const [elapsed, setElapsed] = useState(0); // live seconds for active stage
   const [preview, setPreview] = useState<string>("");
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const startedRef = useRef(false);
   const navigatedRef = useRef(false);
@@ -119,6 +120,15 @@ export function Processing() {
     )
       .then((out) => {
         if (navigatedRef.current) return;
+
+        // real audio failed → show the error, never fake a sample result
+        if (out.source === "error" || !out.analysis) {
+          setActiveKey(null);
+          setError(out.error ?? "วิเคราะห์ไม่สำเร็จ");
+          invalidate("projects"); // surface the error row in History too
+          return;
+        }
+
         navigatedRef.current = true;
         setActiveKey(null);
         setStates({
@@ -148,10 +158,10 @@ export function Processing() {
         invalidate("projects"); // fresh History after a new run
         setTimeout(() => router.push(`/results/${id}`), 700);
       })
-      .catch(() => {
+      .catch((e) => {
         if (navigatedRef.current) return;
-        navigatedRef.current = true;
-        router.push("/results/sample");
+        setActiveKey(null);
+        setError(e instanceof Error ? e.message : "วิเคราะห์ไม่สำเร็จ");
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -159,6 +169,74 @@ export function Processing() {
   const doneCount = STAGES.filter((s) => states[s.key] === "done").length;
   const pct = Math.round((doneCount / STAGES.length) * 100);
   const C = 2 * Math.PI * 42;
+
+  if (error) {
+    return (
+      <>
+        <TopBar
+          title="วิเคราะห์ไม่สำเร็จ"
+          sub={audioName}
+          right={
+            <Tag color="var(--rose)" bg="var(--rose-soft)" icon="triangle-alert">
+              ผิดพลาด
+            </Tag>
+          }
+        />
+        <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "32px 12px" : "60px 24px" }}>
+          <div style={{ maxWidth: 540, margin: "0 auto", textAlign: "center" }}>
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 20,
+                background: "var(--rose-soft)",
+                color: "var(--rose)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 18px",
+              }}
+            >
+              <Icon name="triangle-alert" size={34} />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 800 }}>วิเคราะห์ไม่สำเร็จ</h2>
+            <p style={{ fontSize: 15, color: "var(--muted)", marginTop: 8, lineHeight: 1.65 }}>
+              ระบบถอดเสียง/วิเคราะห์มีปัญหา จึงยังไม่ได้ผลลัพธ์จริง
+              (ระบบจะไม่แสดงข้อมูลตัวอย่างแทน เพื่อไม่ให้เข้าใจผิด)
+            </p>
+            <div
+              className="mono"
+              style={{
+                marginTop: 14,
+                padding: "12px 14px",
+                background: "var(--surface-2)",
+                border: "1px solid var(--line)",
+                borderRadius: 12,
+                fontSize: 12.5,
+                color: "var(--ink-2)",
+                textAlign: "left",
+                wordBreak: "break-word",
+              }}
+            >
+              {error}
+            </div>
+            <div style={{ marginTop: 16, fontSize: 13.5, color: "var(--faint)", textAlign: "left", lineHeight: 1.7 }}>
+              ตรวจสอบ: STT พร้อมไหม (Local Whisper ที่ :8000 หรือ OpenAI key) · เครื่องมือ
+              วิเคราะห์พร้อมไหม (Claude CLI ล็อกอิน หรือ API key) — ดู README
+            </div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+              <Btn icon="rotate-cw" onClick={() => router.push("/workspace")}>
+                ลองใหม่
+              </Btn>
+              <Btn variant="ghost" icon="history" onClick={() => router.push("/history")}>
+                ดูประวัติ
+              </Btn>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

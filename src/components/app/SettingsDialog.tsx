@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
 import { Icon, Btn } from "@/components/ui/primitives";
-import { apiKeyAtom, providerAtom, depthAtom, maskApiKey } from "@/lib/atoms";
+import { apiKeyAtom, providerAtom, maskApiKey } from "@/lib/atoms";
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const [savedKey, setSavedKey] = useAtom(apiKeyAtom);
   const [provider, setProvider] = useAtom(providerAtom);
-  const [depth, setDepth] = useAtom(depthAtom);
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState(!savedKey);
 
@@ -116,48 +115,6 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           })}
         </div>
 
-        {/* analysis depth */}
-        <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 10 }}>
-          ความละเอียดการวิเคราะห์
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
-          {(
-            [
-              { id: "fast", t: "เร็ว", d: "Haiku · ไวกว่า", icon: "zap" },
-              { id: "deep", t: "ละเอียด", d: "Sonnet · ลึกกว่า", icon: "brain" },
-            ] as const
-          ).map((o) => {
-            const on = depth === o.id;
-            return (
-              <button
-                key={o.id}
-                onClick={() => setDepth(o.id)}
-                style={{
-                  textAlign: "left",
-                  padding: "12px 14px",
-                  borderRadius: 14,
-                  border: `1.5px solid ${on ? "var(--brand)" : "var(--line)"}`,
-                  background: on ? "var(--brand-soft)" : "var(--surface)",
-                  display: "flex",
-                  gap: 10,
-                  alignItems: "center",
-                  transition: "all .15s",
-                }}
-              >
-                <Icon name={o.icon} size={18} style={{ color: "var(--brand-ink)" }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700 }}>{o.t}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{o.d}</div>
-                </div>
-                <Icon
-                  name={on ? "check-circle-2" : "circle"}
-                  size={17}
-                  style={{ color: on ? "var(--brand)" : "var(--line)" }}
-                />
-              </button>
-            );
-          })}
-        </div>
 
         {/* api key */}
         <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 10 }}>

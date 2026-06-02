@@ -8,7 +8,7 @@ import { useAtom } from "jotai";
 import { useRecorder } from "@/lib/useRecorder";
 import { store } from "@/lib/store";
 import { PROJECT } from "@/lib/sample-data";
-import { apiKeyAtom, providerAtom, depthAtom, maskApiKey } from "@/lib/atoms";
+import { apiKeyAtom, providerAtom, maskApiKey } from "@/lib/atoms";
 import { useIsMobile } from "@/lib/useMediaQuery";
 
 function fmt(s: number) {
@@ -95,7 +95,6 @@ export function Workspace() {
   const [name, setName] = useState(PROJECT.audioName);
   const [editing, setEditing] = useState(false);
   const [provider, setProvider] = useAtom(providerAtom);
-  const [depth, setDepth] = useAtom(depthAtom);
   const [savedKey, setSavedKey] = useAtom(apiKeyAtom); // persisted (localStorage)
   const [draftKey, setDraftKey] = useState(""); // input buffer when entering
   const [editingKey, setEditingKey] = useState(false);
@@ -191,7 +190,6 @@ export function Workspace() {
       durationSec: rec.seconds,
       provider,
       apiKey: key,
-      depth,
     });
     router.push("/processing");
   };
@@ -758,70 +756,6 @@ export function Workspace() {
                     </p>
                   </div>
                 )}
-              </Card>
-
-              {/* analysis depth */}
-              <Card pad={22} style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
-                  ความละเอียดการวิเคราะห์
-                </div>
-                <p style={{ fontSize: 13.5, color: "var(--muted)", marginBottom: 16 }}>
-                  เลือกความเร็วในการวิเคราะห์ — ใช้หลักเกณฑ์ประเมินชุดเดียวกันทั้งคู่
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
-                  {(
-                    [
-                      { id: "fast", t: "เร็ว", d: "Haiku · ไวกว่า ~2 เท่า", icon: "zap" },
-                      { id: "deep", t: "ละเอียด", d: "Sonnet · วิเคราะห์ลึกกว่า", icon: "brain" },
-                    ] as const
-                  ).map((o) => {
-                    const on = depth === o.id;
-                    return (
-                      <button
-                        key={o.id}
-                        onClick={() => setDepth(o.id)}
-                        style={{
-                          textAlign: "left",
-                          padding: "14px 16px",
-                          borderRadius: 14,
-                          border: `1.5px solid ${on ? "var(--brand)" : "var(--line)"}`,
-                          background: on ? "var(--brand-soft)" : "var(--surface)",
-                          display: "flex",
-                          gap: 11,
-                          alignItems: "flex-start",
-                          transition: "all .15s",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 10,
-                            background: on ? "var(--surface)" : "var(--surface-2)",
-                            color: "var(--brand-ink)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flex: "none",
-                          }}
-                        >
-                          <Icon name={o.icon} size={18} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 14.5, fontWeight: 700 }}>{o.t}</div>
-                          <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 1 }}>
-                            {o.d}
-                          </div>
-                        </div>
-                        <Icon
-                          name={on ? "check-circle-2" : "circle"}
-                          size={18}
-                          style={{ color: on ? "var(--brand)" : "var(--line)", flex: "none" }}
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
               </Card>
 
               <Btn
