@@ -35,6 +35,12 @@ export async function POST(req: Request) {
     if (body.id) {
       const db = getDb();
       if (db) {
+        // SECURITY (IDOR): this updates a project by id with no ownership check
+        // because the app has no auth yet (single-user / guest mode). When auth
+        // ships, scope every DB write by owner, e.g.
+        //   where: { id: body.id, userId: session.user.id }
+        // and return 403 when the caller is not the owner. Same applies to
+        // /api/analyze (create) and /api/projects/[id] (delete).
         try {
           await db.project.update({
             where: { id: body.id },

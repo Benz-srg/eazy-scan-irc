@@ -47,4 +47,8 @@ AI Manday Estimator. Built faithfully from a Claude Design handoff (EazyScan.htm
 - `/api/analyze` streams NDJSON stage events; the Processing UI follows real stages + real timing.
 - Audio served only via `/api/audio/[filename]` with path-traversal guard.
 - API keys (OpenAI) live in browser localStorage only (jotai), never in our DB. Sent per-request for STT.
+- **Auth is not implemented yet** (guest mode; login is "coming soon"; `Project` has no `userId`).
+  DB write routes (`/api/analyze` create, `/api/projects/[id]` delete, `/api/reanalyze` update) are
+  therefore unauthenticated — a known IDOR gap. When auth lands, add `userId` to `Project` and scope
+  EVERY DB query by owner together (`where: { id, userId }`), returning 401/403 otherwise.
 - Run `pnpm typecheck` and `pnpm build` before declaring done.
