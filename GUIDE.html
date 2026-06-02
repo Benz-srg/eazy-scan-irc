@@ -63,6 +63,11 @@
     padding:16px 14px;text-align:center;box-shadow:var(--sh-sm);}
   .flow-ico{width:42px;height:42px;border-radius:12px;background:var(--grad-soft);color:var(--brand-ink);
     display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+  .brand-logos{display:flex;align-items:center;gap:5px;}
+  .bl{display:inline-flex;}
+  .bl svg{width:18px;height:18px;display:block;}
+  td .bl svg{width:20px;height:20px;}
+  .prov-cell{display:flex;align-items:center;gap:9px;}
   .flow-step .t{font-size:14.5px;font-weight:700;}
   .flow-step .d{font-size:12.5px;color:var(--muted);margin-top:2px;}
   .flow-arrow{display:flex;align-items:center;color:var(--faint);font-size:20px;}
@@ -152,7 +157,14 @@
       </div>
       <div class="flow-arrow">→</div>
       <div class="flow-step">
-        <div class="flow-ico">🧠</div><div class="t">วิเคราะห์ด้วย AI</div><div class="d">Claude / GPT / Gemini</div>
+        <div class="flow-ico" style="background:#fff;border:1px solid var(--line)">
+          <span class="brand-logos">
+            <span class="bl" title="Claude"><svg viewBox="0 0 24 24" fill="#D97757" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.2c.28 3.05.9 5.02 2.06 6.18C15.22 9.54 17.2 10.16 20.25 10.44v3.12c-3.05.28-5.03.9-6.19 2.06-1.16 1.16-1.78 3.13-2.06 6.18-.28-3.05-.9-5.02-2.06-6.18-1.16-1.16-3.14-1.78-6.19-2.06v-3.12c3.05-.28 5.03-.9 6.19-2.06C11.1 7.22 11.72 5.25 12 2.2Z"/></svg></span>
+            <span class="bl" title="OpenAI"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><path d="M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"/><path d="M12 3v4.5M12 16.5V21M3 12h4.5M16.5 12H21M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/></svg></span>
+            <span class="bl" title="Gemini"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gem-flow" x1="0" y1="0" x2="24" y2="24"><stop offset="0" stop-color="#4796E3"/><stop offset=".5" stop-color="#9177C7"/><stop offset="1" stop-color="#D96570"/></linearGradient></defs><path d="M12 2c.6 5.2 4.8 9.4 10 10-5.2.6-9.4 4.8-10 10-.6-5.2-4.8-9.4-10-10C7.2 11.4 11.4 7.2 12 2Z" fill="url(#gem-flow)"/></svg></span>
+          </span>
+        </div>
+        <div class="t">วิเคราะห์ด้วย AI</div><div class="d">Claude / GPT / Gemini</div>
       </div>
       <div class="flow-arrow">→</div>
       <div class="flow-step">
@@ -333,10 +345,10 @@ echo "hi" | claude -p --output-format json <span class="cmt"># เช็คว�
     <p class="lead">ตั้งผ่าน <code class="mono">LLM_PROVIDER</code> ใน .env — ทุกตัวใช้กฎ/คุณภาพชุดเดียวกัน</p>
     <table>
       <tr><th>Provider</th><th>ต้องมี</th><th>ค่าใช้จ่าย</th></tr>
-      <tr><td>claude-cli <span style="color:var(--faint);font-weight:400">(ดีฟอลต์ local)</span></td><td>Claude Code CLI ล็อกอิน</td><td><span class="chip free">ฟรี (ไม่ต้องมี key)</span></td></tr>
-      <tr><td>anthropic</td><td>ANTHROPIC_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
-      <tr><td>gemini</td><td>GEMINI_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
-      <tr><td>openai <span style="color:var(--faint);font-weight:400">(ดีฟอลต์ Docker)</span></td><td>OPENAI_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
+      <tr><td><span class="prov-cell"><span class="bl"><svg viewBox="0 0 24 24" fill="#D97757"><path d="M12 2.2c.28 3.05.9 5.02 2.06 6.18C15.22 9.54 17.2 10.16 20.25 10.44v3.12c-3.05.28-5.03.9-6.19 2.06-1.16 1.16-1.78 3.13-2.06 6.18-.28-3.05-.9-5.02-2.06-6.18-1.16-1.16-3.14-1.78-6.19-2.06v-3.12c3.05-.28 5.03-.9 6.19-2.06C11.1 7.22 11.72 5.25 12 2.2Z"/></svg></span>claude-cli <span style="color:var(--faint);font-weight:400">(ดีฟอลต์ local)</span></span></td><td>Claude Code CLI ล็อกอิน</td><td><span class="chip free">ฟรี (ไม่ต้องมี key)</span></td></tr>
+      <tr><td><span class="prov-cell"><span class="bl"><svg viewBox="0 0 24 24" fill="#D97757"><path d="M12 2.2c.28 3.05.9 5.02 2.06 6.18C15.22 9.54 17.2 10.16 20.25 10.44v3.12c-3.05.28-5.03.9-6.19 2.06-1.16 1.16-1.78 3.13-2.06 6.18-.28-3.05-.9-5.02-2.06-6.18-1.16-1.16-3.14-1.78-6.19-2.06v-3.12c3.05-.28 5.03-.9 6.19-2.06C11.1 7.22 11.72 5.25 12 2.2Z"/></svg></span>anthropic</span></td><td>ANTHROPIC_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
+      <tr><td><span class="prov-cell"><span class="bl"><svg viewBox="0 0 24 24"><defs><linearGradient id="gem-tbl" x1="0" y1="0" x2="24" y2="24"><stop offset="0" stop-color="#4796E3"/><stop offset=".5" stop-color="#9177C7"/><stop offset="1" stop-color="#D96570"/></linearGradient></defs><path d="M12 2c.6 5.2 4.8 9.4 10 10-5.2.6-9.4 4.8-10 10-.6-5.2-4.8-9.4-10-10C7.2 11.4 11.4 7.2 12 2Z" fill="url(#gem-tbl)"/></svg></span>gemini</span></td><td>GEMINI_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
+      <tr><td><span class="prov-cell"><span class="bl"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6"><path d="M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"/><path d="M12 3v4.5M12 16.5V21M3 12h4.5M16.5 12H21M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/></svg></span>openai <span style="color:var(--faint);font-weight:400">(ดีฟอลต์ Docker)</span></span></td><td>OPENAI_API_KEY</td><td><span class="chip paid">จ่ายตาม API</span></td></tr>
     </table>
     <p style="font-size:13.5px;color:var(--muted);margin-top:12px">STT: <b>Local Whisper</b> (ฟรี, ในเครื่อง) หรือ <b>OpenAI Whisper</b> (เร็วกว่า, ใช้ key) — เลือกได้ในแอป</p>
   </section>
