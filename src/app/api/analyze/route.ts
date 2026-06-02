@@ -83,9 +83,17 @@ export async function POST(req: Request) {
         });
 
         // 3. analyze (LLM)
+        // the user-supplied apiKey is an OpenAI STT key — only forward it to the
+        // analyzer when the LLM provider is also OpenAI, else it overrides the
+        // provider's own env key and breaks auth.
+        const llmProvider = (process.env.LLM_PROVIDER || "claude-cli").toLowerCase();
+        const llmApiKey = llmProvider === "openai" ? apiKey : undefined;
         send({ type: "stage", key: "analyze", state: "start" });
         const tLlm = Date.now();
-        const analysis = await analyzeTranscript(transcript, { apiKey, depth });
+        const analysis = await analyzeTranscript(transcript, {
+          apiKey: llmApiKey,
+          depth,
+        });
         const llmMs = Date.now() - tLlm;
         send({ type: "stage", key: "analyze", state: "done", ms: llmMs });
 

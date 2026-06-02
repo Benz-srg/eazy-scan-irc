@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — ignore real secrets, keep the template
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -41,7 +43,8 @@ yarn-error.log*
 next-env.d.ts
 
 # eazyscan
-/uploads
+/uploads/*
+!/uploads/.gitkeep
 /python/.venv
 /python/__pycache__
 .playwright-mcp/

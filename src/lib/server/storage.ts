@@ -6,7 +6,8 @@ import crypto from "node:crypto";
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 function extFor(name: string, type: string): string {
-  const fromName = path.extname(name).replace(".", "");
+  // lowercase so the stored name matches readAudio's allowlist (which is lc-only)
+  const fromName = path.extname(name).replace(".", "").toLowerCase();
   if (fromName) return fromName;
   if (type.includes("mpeg") || type.includes("mp3")) return "mp3";
   if (type.includes("wav")) return "wav";

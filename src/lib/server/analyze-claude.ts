@@ -37,6 +37,10 @@ function runClaude(prompt: string, model: string): Promise<CliEnvelope> {
       reject(new Error("claude CLI timed out"));
     }, TIMEOUT_MS);
 
+    // decode as UTF-8 across chunk boundaries — Thai chars are 3 bytes and
+    // would corrupt (U+FFFD) if a multibyte sequence straddled two chunks
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
     child.stdout.on("data", (d) => (stdout += d));
     child.stderr.on("data", (d) => (stderr += d));
     child.on("error", (e) => {

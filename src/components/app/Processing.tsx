@@ -102,6 +102,7 @@ export function Processing() {
         audioName: session.audioName,
         provider: session.provider,
         apiKey: session.apiKey,
+        depth: session.depth,
       },
       (ev) => {
         if (ev.type !== "stage") return;

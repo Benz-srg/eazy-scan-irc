@@ -60,7 +60,12 @@ function emit() {
 function persistHistory() {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history));
+    // blob: URLs are invalid after reload — don't persist them (keep served
+    // /api/audio/... URLs which survive). Live blob URL stays in memory state.
+    const serializable = state.history.map((h) =>
+      h.audioUrl?.startsWith("blob:") ? { ...h, audioUrl: undefined } : h,
+    );
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(serializable));
   } catch {}
 }
 

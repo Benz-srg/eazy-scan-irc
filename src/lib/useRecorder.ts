@@ -144,6 +144,13 @@ export function useRecorder(barCount = 56): RecorderResult {
       mediaRef.current?.stop();
     } catch {}
     streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    // release the analyser graph (mediaRecorder already captured the blob)
+    if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+      audioCtxRef.current.close().catch(() => {});
+    }
+    audioCtxRef.current = null;
+    analyserRef.current = null;
     setLevels([]);
     setStatus("recorded");
   }, []);

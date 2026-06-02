@@ -35,6 +35,9 @@ export function History() {
     };
   }, []);
 
+  // stop any playing preview audio when leaving the page
+  useEffect(() => () => audioRef.current?.pause(), []);
+
   const tags = useMemo(
     () => ["all", ...Array.from(new Set(items.map((h) => h.tag)))],
     [items],
