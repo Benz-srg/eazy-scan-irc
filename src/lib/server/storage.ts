@@ -31,13 +31,19 @@ export async function saveAudio(
   return { id, filename, url: `/api/audio/${filename}` };
 }
 
+// stored names are always `<uuid>.<ext>` — enforce that exact shape
+const SAFE_NAME = /^[A-Za-z0-9_-]+\.(webm|mp3|wav|m4a|ogg)$/;
+
 export async function readAudio(
   filename: string,
 ): Promise<{ buf: Buffer; type: string } | null> {
-  // guard against path traversal — only a bare filename is allowed
-  if (filename.includes("/") || filename.includes("..")) return null;
+  // strict allowlist: reject traversal and anything not a known audio filename
+  if (!SAFE_NAME.test(filename)) return null;
   try {
-    const buf = await fs.readFile(path.join(UPLOAD_DIR, filename));
+    const dir = await fs.realpath(UPLOAD_DIR);
+    const resolved = await fs.realpath(path.join(dir, filename));
+    if (resolved !== path.join(dir, filename)) return null; // symlink escape guard
+    const buf = await fs.readFile(resolved);
     const ext = path.extname(filename).replace(".", "");
     const type =
       ext === "mp3"

@@ -48,6 +48,14 @@ export async function POST(req: Request) {
           controller.close();
           return;
         }
+        // accept audio only — by mime or known extension
+        const okExt = /\.(webm|mp3|wav|m4a|ogg)$/i.test(filename);
+        const okMime = (audio.type || "").startsWith("audio/");
+        if (!okExt && !okMime) {
+          fail("ชนิดไฟล์ไม่รองรับ — รองรับเฉพาะไฟล์เสียง (.mp3 .wav .m4a)");
+          controller.close();
+          return;
+        }
 
         // 1. upload received
         send({ type: "stage", key: "upload", state: "done", ms: 0 });
