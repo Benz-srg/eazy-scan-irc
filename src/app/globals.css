@@ -198,6 +198,14 @@ p {
     opacity: 0;
   }
 }
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
 .fadeUp {
   animation: fadeUp 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
@@ -212,6 +220,14 @@ select:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* mobile: hide landing's inline-nav links (inline style → needs !important) */
+@media (max-width: 640px) {
+  .lp-nav,
+  .lp-login {
+    display: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

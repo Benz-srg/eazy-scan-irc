@@ -120,6 +120,7 @@ function LandingNav({
         <div style={{ flex: 1 }} />
         <button
           onClick={onLogin}
+          className="lp-login"
           style={{
             fontSize: 15,
             fontWeight: 600,

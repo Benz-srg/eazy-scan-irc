@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Icon, Logo, Btn } from "@/components/ui/primitives";
 import { useCurrentUser } from "@/lib/useCurrentUser";
+import { useIsMobile } from "@/lib/useMediaQuery";
 import { ComingSoon } from "@/components/ui/ComingSoon";
 import { SettingsDialog } from "@/components/app/SettingsDialog";
 
@@ -115,10 +116,117 @@ function UserChip() {
   );
 }
 
+const NAV = [
+  { id: "workspace", label: "พื้นที่ทำงาน", icon: "audio-lines", href: "/workspace" },
+  { id: "history", label: "ประวัติการวิเคราะห์", icon: "history", href: "/history" },
+];
+
+function SidebarBody({
+  active,
+  onNav,
+  goHome,
+}: {
+  active: string;
+  onNav: (href: string) => void;
+  goHome: () => void;
+}) {
+  return (
+    <>
+      <div style={{ padding: "4px 8px 18px", cursor: "pointer" }} onClick={goHome}>
+        <Logo size={30} />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <Btn full icon="plus" size="md" onClick={() => onNav("/workspace")}>
+          วิเคราะห์ใหม่
+        </Btn>
+      </div>
+      <nav style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
+        <div
+          style={{
+            fontSize: 11.5,
+            fontWeight: 700,
+            color: "var(--faint)",
+            letterSpacing: "0.06em",
+            padding: "8px 12px 6px",
+          }}
+        >
+          เมนู
+        </div>
+        {NAV.map((n) => {
+          const on = active === n.id;
+          return (
+            <button
+              key={n.id}
+              onClick={() => onNav(n.href)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 11,
+                padding: "10px 12px",
+                borderRadius: 12,
+                fontSize: 15,
+                fontWeight: on ? 700 : 500,
+                color: on ? "var(--brand-ink)" : "var(--ink-2)",
+                background: on ? "var(--brand-soft)" : "transparent",
+                textAlign: "left",
+                transition: "all .15s",
+              }}
+            >
+              <Icon name={n.icon} size={19} /> {n.label}
+            </button>
+          );
+        })}
+      </nav>
+      <div style={{ flex: 1 }} />
+      <div
+        style={{
+          background: "var(--grad-soft)",
+          borderRadius: 16,
+          padding: 16,
+          border: "1px solid var(--line)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontWeight: 700,
+            fontSize: 14.5,
+          }}
+        >
+          <Icon name="zap" size={17} style={{ color: "var(--brand-ink)" }} /> แพ็กเกจ Free
+        </div>
+        <div style={{ fontSize: 13, color: "var(--muted)", margin: "8px 0 10px" }}>
+          เหลือ 3 จาก 5 ครั้งในเดือนนี้
+        </div>
+        <div
+          style={{
+            height: 6,
+            background: "var(--surface)",
+            borderRadius: 99,
+            overflow: "hidden",
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ width: "40%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
+        </div>
+        <Btn full size="sm" variant="primary" icon="arrow-up-right">
+          อัปเกรดเป็น Pro
+        </Btn>
+      </div>
+      <SettingsButton />
+      <UserChip />
+    </>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   const active = pathname.startsWith("/history") ? "history" : "workspace";
+  const [drawer, setDrawer] = useState(false);
 
   // warm the sibling routes so in-app navigation is instant
   useEffect(() => {
@@ -126,20 +234,113 @@ export function AppShell({ children }: { children: ReactNode }) {
     router.prefetch("/history");
   }, [router]);
 
-  const nav = [
-    { id: "workspace", label: "พื้นที่ทำงาน", icon: "audio-lines", href: "/workspace" },
-    { id: "history", label: "ประวัติการวิเคราะห์", icon: "history", href: "/history" },
-  ];
+  // close the drawer whenever the route changes
+  useEffect(() => {
+    setDrawer(false);
+  }, [pathname]);
 
+  const goHome = () => router.push("/");
+  const onNav = (href: string) => {
+    router.push(href);
+    setDrawer(false);
+  };
+
+  if (isMobile) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100dvh",
+          overflow: "hidden",
+          background: "var(--bg)",
+        }}
+      >
+        {/* mobile top app bar */}
+        <header
+          style={{
+            height: 56,
+            flex: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "0 14px",
+            background: "var(--surface)",
+            borderBottom: "1px solid var(--line)",
+            zIndex: 30,
+          }}
+        >
+          <button
+            onClick={() => setDrawer(true)}
+            aria-label="เปิดเมนู"
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--ink-2)",
+              flex: "none",
+            }}
+          >
+            <Icon name="menu" size={22} />
+          </button>
+          <div onClick={goHome} style={{ cursor: "pointer" }}>
+            <Logo size={26} />
+          </div>
+          <div style={{ flex: 1 }} />
+          <Btn size="sm" icon="plus" onClick={() => onNav("/workspace")}>
+            ใหม่
+          </Btn>
+        </header>
+
+        {/* drawer + backdrop */}
+        {drawer && (
+          <div
+            onClick={() => setDrawer(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(23,23,40,.42)",
+              backdropFilter: "blur(2px)",
+              zIndex: 100,
+              animation: "fadeIn .2s",
+            }}
+          >
+            <aside
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: "82%",
+                maxWidth: 300,
+                background: "var(--surface)",
+                borderRight: "1px solid var(--line)",
+                display: "flex",
+                flexDirection: "column",
+                padding: "18px 16px",
+                overflowY: "auto",
+                animation: "slideInLeft .25s cubic-bezier(.2,.7,.3,1) both",
+              }}
+            >
+              <SidebarBody active={active} onNav={onNav} goHome={goHome} />
+            </aside>
+          </div>
+        )}
+
+        <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {children}
+        </main>
+      </div>
+    );
+  }
+
+  // desktop: fixed sidebar
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        overflow: "hidden",
-        background: "var(--bg)",
-      }}
-    >
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--bg)" }}>
       <aside
         style={{
           width: 256,
@@ -151,118 +352,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           padding: "20px 16px",
         }}
       >
-        <div
-          style={{ padding: "4px 8px 18px", cursor: "pointer" }}
-          onClick={() => router.push("/")}
-        >
-          <Logo size={30} />
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <Btn full icon="plus" size="md" onClick={() => router.push("/workspace")}>
-            วิเคราะห์ใหม่
-          </Btn>
-        </div>
-        <nav
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-            marginTop: 6,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11.5,
-              fontWeight: 700,
-              color: "var(--faint)",
-              letterSpacing: "0.06em",
-              padding: "8px 12px 6px",
-            }}
-          >
-            เมนู
-          </div>
-          {nav.map((n) => {
-            const on = active === n.id;
-            return (
-              <button
-                key={n.id}
-                onClick={() => router.push(n.href)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 11,
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  fontSize: 15,
-                  fontWeight: on ? 700 : 500,
-                  color: on ? "var(--brand-ink)" : "var(--ink-2)",
-                  background: on ? "var(--brand-soft)" : "transparent",
-                  textAlign: "left",
-                  transition: "all .15s",
-                }}
-              >
-                <Icon name={n.icon} size={19} /> {n.label}
-              </button>
-            );
-          })}
-        </nav>
-        <div style={{ flex: 1 }} />
-        <div
-          style={{
-            background: "var(--grad-soft)",
-            borderRadius: 16,
-            padding: 16,
-            border: "1px solid var(--line)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontWeight: 700,
-              fontSize: 14.5,
-            }}
-          >
-            <Icon name="zap" size={17} style={{ color: "var(--brand-ink)" }} />{" "}
-            แพ็กเกจ Free
-          </div>
-          <div style={{ fontSize: 13, color: "var(--muted)", margin: "8px 0 10px" }}>
-            เหลือ 3 จาก 5 ครั้งในเดือนนี้
-          </div>
-          <div
-            style={{
-              height: 6,
-              background: "var(--surface)",
-              borderRadius: 99,
-              overflow: "hidden",
-              marginBottom: 12,
-            }}
-          >
-            <div
-              style={{
-                width: "40%",
-                height: "100%",
-                background: "var(--grad)",
-                borderRadius: 99,
-              }}
-            />
-          </div>
-          <Btn full size="sm" variant="primary" icon="arrow-up-right">
-            อัปเกรดเป็น Pro
-          </Btn>
-        </div>
-        <SettingsButton />
-        <UserChip />
+        <SidebarBody active={active} onNav={onNav} goHome={goHome} />
       </aside>
-      <main
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {children}
       </main>
     </div>
@@ -278,26 +370,46 @@ export function TopBar({
   sub?: string;
   right?: ReactNode;
 }) {
+  const isMobile = useIsMobile();
   return (
     <div
       style={{
-        height: 72,
+        minHeight: 72,
         flex: "none",
         borderBottom: "1px solid var(--line)",
         background: "rgba(255,255,255,.7)",
         backdropFilter: "blur(10px)",
         display: "flex",
         alignItems: "center",
-        padding: "0 28px",
-        gap: 16,
+        padding: isMobile ? "12px 16px" : "0 28px",
+        gap: 12,
+        flexWrap: isMobile ? "wrap" : "nowrap",
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h1 style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em" }}>
+        <h1
+          style={{
+            fontSize: isMobile ? 17 : 19,
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
           {title}
         </h1>
         {sub && (
-          <p style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 1 }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: "var(--muted)",
+              marginTop: 1,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
             {sub}
           </p>
         )}

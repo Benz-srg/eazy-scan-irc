@@ -9,6 +9,7 @@ import { useRecorder } from "@/lib/useRecorder";
 import { store } from "@/lib/store";
 import { PROJECT } from "@/lib/sample-data";
 import { apiKeyAtom, providerAtom, depthAtom, maskApiKey } from "@/lib/atoms";
+import { useIsMobile } from "@/lib/useMediaQuery";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -98,6 +99,7 @@ export function Workspace() {
   const [savedKey, setSavedKey] = useAtom(apiKeyAtom); // persisted (localStorage)
   const [draftKey, setDraftKey] = useState(""); // input buffer when entering
   const [editingKey, setEditingKey] = useState(false);
+  const isMobile = useIsMobile();
   const [dragOver, setDragOver] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [prog, setProg] = useState(0);
@@ -200,7 +202,7 @@ export function Workspace() {
         title="พื้นที่ทำงาน"
         sub="อัปโหลดหรืออัดเสียง Requirement เพื่อเริ่มวิเคราะห์"
       />
-      <div style={{ flex: 1, overflowY: "auto", padding: "32px 24px 60px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "20px 10px 56px" : "32px 24px 60px" }}>
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
           {stage === "idle" && (
             <div className="fadeUp">
@@ -584,7 +586,7 @@ export function Workspace() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
                     gap: 12,
                   }}
                 >
@@ -766,7 +768,7 @@ export function Workspace() {
                 <p style={{ fontSize: 13.5, color: "var(--muted)", marginBottom: 16 }}>
                   เลือกความเร็วในการวิเคราะห์ — ใช้หลักเกณฑ์ประเมินชุดเดียวกันทั้งคู่
                 </p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
                   {(
                     [
                       { id: "fast", t: "เร็ว", d: "Haiku · ไวกว่า ~2 เท่า", icon: "zap" },

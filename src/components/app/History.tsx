@@ -6,6 +6,7 @@ import { Icon, Btn, Card, Tag } from "@/components/ui/primitives";
 import { TopBar } from "@/components/app/AppShell";
 import { store, useStore } from "@/lib/store";
 import { useSWR, mutate, invalidate } from "@/lib/swr";
+import { useIsMobile } from "@/lib/useMediaQuery";
 import type { HistoryItem } from "@/lib/types";
 
 async function fetchProjects(): Promise<HistoryItem[]> {
@@ -19,6 +20,7 @@ type Sort = "date" | "name" | "manday";
 
 export function History() {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const items = useStore((s) => s.history);
   const [q, setQ] = useState("");
   const [tag, setTag] = useState("all");
@@ -106,7 +108,7 @@ export function History() {
         }
       />
       <div
-        style={{ flex: 1, overflowY: "auto", padding: "28px 24px 60px" }}
+        style={{ flex: 1, overflowY: "auto", padding: isMobile ? "18px 10px 56px" : "28px 24px 60px" }}
         onClick={() => setMenuId(null)}
       >
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
@@ -247,9 +249,20 @@ export function History() {
                   style={{
                     position: "relative",
                     cursor: h.status === "processing" ? "default" : "pointer",
+                    // lift the open row above sibling cards (their hover transform
+                    // makes a stacking context that would otherwise cover the menu)
+                    zIndex: menuId === h.id ? 40 : undefined,
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: isMobile ? "stretch" : "center",
+                      flexDirection: isMobile ? "column" : "row",
+                      gap: isMobile ? 12 : 16,
+                    }}
+                  >
+                   <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
                     <div
                       style={{
                         width: 50,
@@ -332,8 +345,16 @@ export function History() {
                         </span>
                       </div>
                     </div>
+                   </div>
                     <div
-                      style={{ display: "flex", alignItems: "center", gap: 16, flex: "none" }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: isMobile ? 12 : 16,
+                        flex: "none",
+                        justifyContent: isMobile ? "flex-end" : "flex-start",
+                        paddingLeft: isMobile ? 64 : 0,
+                      }}
                       className="hist-meta"
                     >
                       {h.audioUrl && (

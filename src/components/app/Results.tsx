@@ -18,6 +18,7 @@ import { PROMPTS } from "@/lib/sample-data";
 import { exportDoc } from "@/lib/export-client";
 import { apiKeyAtom, depthAtom } from "@/lib/atoms";
 import { invalidate } from "@/lib/swr";
+import { useIsMobile } from "@/lib/useMediaQuery";
 import { AnalysisSchema, type Analysis } from "@/lib/types";
 
 type Props = {
@@ -40,6 +41,7 @@ function ResultHero({
   audioName: string;
   audioUrl?: string;
 }) {
+  const isMobile = useIsMobile();
   const total = `${a.mandayMin}–${a.mandayMax}`;
   const stats = [
     { label: "ฟีเจอร์", value: a.features.length, icon: "layers" },
@@ -58,7 +60,7 @@ function ResultHero({
         borderRadius: "var(--r-xl)",
         overflow: "hidden",
         background: "var(--grad)",
-        padding: "30px 30px",
+        padding: isMobile ? "22px 18px" : "30px 30px",
         color: "#fff",
         boxShadow: "0 18px 44px rgba(99,102,241,.3)",
         marginBottom: 22,
@@ -147,6 +149,7 @@ function ResultHero({
             textAlign: "center",
             backdropFilter: "blur(6px)",
             border: "1px solid rgba(255,255,255,.2)",
+            width: isMobile ? "100%" : "auto",
           }}
         >
           <div style={{ fontSize: 13, color: "rgba(255,255,255,.85)", fontWeight: 600 }}>
@@ -170,7 +173,7 @@ function ResultHero({
         style={{
           position: "relative",
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
           gap: 12,
           marginTop: 22,
         }}
@@ -239,6 +242,7 @@ function EvidenceNote({ evidence }: { evidence: string }) {
 }
 
 function ExecSummary({ a }: { a: Analysis }) {
+  const isMobile = useIsMobile();
   return (
     <Card pad={24}>
       <CardHead
@@ -252,7 +256,7 @@ function ExecSummary({ a }: { a: Analysis }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
           gap: 16,
           marginTop: 18,
         }}
@@ -440,9 +444,29 @@ function FeaturesCard({ a }: { a: Analysis }) {
 }
 
 function MandayCard({ a }: { a: Analysis }) {
+  const isMobile = useIsMobile();
   const max = Math.max(...a.manday.map((m) => m.max), 1);
   const totMin = a.manday.reduce((acc, m) => acc + m.min, 0);
   const totMax = a.manday.reduce((acc, m) => acc + m.max, 0);
+  const bar = (m: { max: number }) => (
+    <div
+      style={{
+        height: 8,
+        background: "var(--line-2)",
+        borderRadius: 99,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          width: `${(m.max / max) * 100}%`,
+          height: "100%",
+          background: "var(--grad)",
+          borderRadius: 99,
+        }}
+      />
+    </div>
+  );
   return (
     <Card pad={24}>
       <CardHead
@@ -456,48 +480,58 @@ function MandayCard({ a }: { a: Analysis }) {
         }
       />
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {a.manday.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 110px 70px",
-              alignItems: "center",
-              gap: 14,
-              padding: "11px 12px",
-              borderRadius: 12,
-              background: i % 2 ? "transparent" : "var(--surface-2)",
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 600 }}>{m.module}</div>
-              <div style={{ fontSize: 12, color: "var(--faint)" }}>{m.note}</div>
-            </div>
+        {a.manday.map((m, i) =>
+          isMobile ? (
+            // mobile: name + number on top, full-width bar below
             <div
+              key={i}
               style={{
-                height: 8,
-                background: "var(--line-2)",
-                borderRadius: 99,
-                overflow: "hidden",
+                padding: "12px 12px",
+                borderRadius: 12,
+                background: i % 2 ? "transparent" : "var(--surface-2)",
               }}
             >
-              <div
-                style={{
-                  width: `${(m.max / max) * 100}%`,
-                  height: "100%",
-                  background: "var(--grad)",
-                  borderRadius: 99,
-                }}
-              />
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 600 }}>{m.module}</div>
+                  <div style={{ fontSize: 12, color: "var(--faint)" }}>{m.note}</div>
+                </div>
+                <div
+                  style={{ fontSize: 14, fontWeight: 800, color: "var(--brand-ink)", flex: "none" }}
+                  className="mono"
+                >
+                  {m.min}–{m.max}
+                </div>
+              </div>
+              <div style={{ marginTop: 9 }}>{bar(m)}</div>
             </div>
+          ) : (
             <div
-              style={{ fontSize: 14, fontWeight: 700, textAlign: "right" }}
-              className="mono"
+              key={i}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 110px 70px",
+                alignItems: "center",
+                gap: 14,
+                padding: "11px 12px",
+                borderRadius: 12,
+                background: i % 2 ? "transparent" : "var(--surface-2)",
+              }}
             >
-              {m.min}–{m.max}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 600 }}>{m.module}</div>
+                <div style={{ fontSize: 12, color: "var(--faint)" }}>{m.note}</div>
+              </div>
+              {bar(m)}
+              <div
+                style={{ fontSize: 14, fontWeight: 700, textAlign: "right" }}
+                className="mono"
+              >
+                {m.min}–{m.max}
+              </div>
             </div>
-          </div>
-        ))}
+          ),
+        )}
       </div>
       <div
         style={{
@@ -734,6 +768,7 @@ function AssumptionsCard({ a }: { a: Analysis }) {
 }
 
 function DepsIntegrations({ a }: { a: Analysis }) {
+  const isMobile = useIsMobile();
   return (
     <Card pad={24}>
       <CardHead
@@ -743,7 +778,7 @@ function DepsIntegrations({ a }: { a: Analysis }) {
         color="var(--ink-2)"
         bg="var(--bg-2)"
       />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
         <div>
           <div
             style={{
@@ -1048,6 +1083,7 @@ export function Results({
   transcript,
 }: Props) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [exp, setExp] = useState(false);
   const [analysis, setAnalysis] = useState<Analysis>(initialAnalysis);
 
@@ -1070,14 +1106,20 @@ export function Results({
           </div>
         }
       />
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 24px 70px" }}>
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: isMobile ? "18px 10px 56px" : "28px 24px 70px",
+        }}
+      >
         <div
           style={{
             maxWidth: 920,
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
-            gap: 22,
+            gap: isMobile ? 16 : 22,
           }}
         >
           <div className="fadeUp">
@@ -1095,7 +1137,9 @@ export function Results({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fit, minmax(420px, 1fr))",
               gap: 22,
             }}
           >

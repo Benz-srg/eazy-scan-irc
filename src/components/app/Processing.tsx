@@ -7,6 +7,7 @@ import { TopBar } from "@/components/app/AppShell";
 import { store, useStore } from "@/lib/store";
 import { runAnalysis, type StageKey } from "@/lib/analyze-client";
 import { invalidate } from "@/lib/swr";
+import { useIsMobile } from "@/lib/useMediaQuery";
 import type { Analysis } from "@/lib/types";
 
 type StageDef = { key: StageKey; t: string; d: string; icon: string };
@@ -33,6 +34,7 @@ function fmtMs(ms: number) {
 export function Processing() {
   const router = useRouter();
   const session = useStore((s) => s.session);
+  const isMobile = useIsMobile();
   const audioName = session.audioName || "Requirement.m4a";
 
   const [states, setStates] = useState<Record<StageKey, StageState>>({
@@ -169,7 +171,7 @@ export function Processing() {
           </Tag>
         }
       />
-      <div style={{ flex: 1, overflowY: "auto", padding: "36px 24px 60px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "22px 10px 56px" : "36px 24px 60px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 34 }}>
             <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 18px" }}>
