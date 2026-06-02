@@ -195,25 +195,11 @@ function SidebarBody({
             fontSize: 14.5,
           }}
         >
-          <Icon name="zap" size={17} style={{ color: "var(--brand-ink)" }} /> แพ็กเกจ Free
+          <Icon name="sparkles" size={17} style={{ color: "var(--brand-ink)" }} /> โหมดเดโม
         </div>
-        <div style={{ fontSize: 13, color: "var(--muted)", margin: "8px 0 10px" }}>
-          เหลือ 3 จาก 5 ครั้งในเดือนนี้
+        <div style={{ fontSize: 13, color: "var(--muted)", margin: "8px 0 4px", lineHeight: 1.55 }}>
+          ใช้งานได้ไม่จำกัด · ฟรีทุกฟีเจอร์ระหว่างเดโม
         </div>
-        <div
-          style={{
-            height: 6,
-            background: "var(--surface)",
-            borderRadius: 99,
-            overflow: "hidden",
-            marginBottom: 12,
-          }}
-        >
-          <div style={{ width: "40%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
-        </div>
-        <Btn full size="sm" variant="primary" icon="arrow-up-right">
-          อัปเกรดเป็น Pro
-        </Btn>
       </div>
       <SettingsButton />
       <UserChip />
