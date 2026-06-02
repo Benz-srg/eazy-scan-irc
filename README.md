@@ -64,6 +64,10 @@ pnpm install && pnpm dev
 
 ทุก provider ใช้ **prompt + หลักเกณฑ์ + Zod schema ชุดเดียวกัน** → คุณภาพ/กฎ anti-hallucination เท่ากัน ต่างแค่ความเร็ว/ความลึก
 
+> **Auto-fallback:** ถ้าตั้ง provider เป็น API (openai/anthropic/gemini) แต่ไม่มี key
+> และเครื่องมี **Claude Code CLI** ติดตั้ง+ล็อกอินอยู่ → ระบบจะใช้ CLI ให้อัตโนมัติ (ฟรี)
+> แทนที่จะ error. (ใน Docker ไม่มี CLI → ไม่ fallback)
+
 **ความละเอียด (เร็ว/ละเอียด)** เลือกในแอป (Workspace หรือเมนูตั้งค่า):
 - **เร็ว** = Haiku/Flash/gpt-4o-mini (ไวกว่า ~2 เท่า, default)
 - **ละเอียด** = Sonnet/Pro/gpt-4o (วิเคราะห์ลึกกว่า)
