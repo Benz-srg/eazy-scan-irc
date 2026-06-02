@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Results } from "@/components/app/Results";
 import { TopBar } from "@/components/app/AppShell";
 import { Icon, Btn } from "@/components/ui/primitives";
-import { useStore } from "@/lib/store";
+import { useAtomValue } from "jotai";
+import { sessionAtom, historyAtom } from "@/lib/atoms";
 import { SAMPLE_ANALYSIS, PROJECT } from "@/lib/sample-data";
 import { AnalysisSchema, type Analysis } from "@/lib/types";
 
@@ -23,8 +24,8 @@ export default function ResultsPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const session = useStore((s) => s.session);
-  const history = useStore((s) => s.history);
+  const session = useAtomValue(sessionAtom);
+  const history = useAtomValue(historyAtom);
 
   const isSample = id === "sample";
   // the just-run analysis from the in-memory session (survives client nav)

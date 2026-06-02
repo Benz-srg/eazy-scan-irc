@@ -4,11 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon, Btn, Card, Tag } from "@/components/ui/primitives";
 import { TopBar } from "@/components/app/AppShell";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useRecorder } from "@/lib/useRecorder";
-import { store } from "@/lib/store";
 import { PROJECT } from "@/lib/sample-data";
-import { apiKeyAtom, providerAtom, maskApiKey } from "@/lib/atoms";
+import { apiKeyAtom, providerAtom, sessionAtom, maskApiKey } from "@/lib/atoms";
 import { useIsMobile } from "@/lib/useMediaQuery";
 
 function fmt(s: number) {
@@ -96,6 +95,7 @@ export function Workspace() {
   const [editing, setEditing] = useState(false);
   const [provider, setProvider] = useAtom(providerAtom);
   const [savedKey, setSavedKey] = useAtom(apiKeyAtom); // persisted (localStorage)
+  const setSession = useSetAtom(sessionAtom);
   const [draftKey, setDraftKey] = useState(""); // input buffer when entering
   const [editingKey, setEditingKey] = useState(false);
   const isMobile = useIsMobile();
@@ -183,13 +183,13 @@ export function Workspace() {
     // if user typed a key but didn't hit save, still use + persist it
     const key = editingKey && draftKey.trim() ? draftKey.trim() : savedKey;
     if (provider === "openai" && key && key !== savedKey) setSavedKey(key);
-    store.setSession({
+    setSession({
       audioBlob: rec.blob,
       audioUrl: rec.url,
       audioName: name,
       durationSec: rec.seconds,
-      provider,
-      apiKey: key,
+      transcript: "",
+      analysis: null,
     });
     router.push("/processing");
   };

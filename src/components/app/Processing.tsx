@@ -2,13 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Icon, Card, Tag, Btn } from "@/components/ui/primitives";
 import { TopBar } from "@/components/app/AppShell";
-import { store, useStore } from "@/lib/store";
+import {
+  sessionAtom,
+  historyAtom,
+  providerAtom,
+  apiKeyAtom,
+} from "@/lib/atoms";
 import { runAnalysis, type StageKey } from "@/lib/analyze-client";
 import { invalidate } from "@/lib/swr";
 import { useIsMobile } from "@/lib/useMediaQuery";
-import type { Analysis } from "@/lib/types";
+import type { Analysis, HistoryItem } from "@/lib/types";
 
 type StageDef = { key: StageKey; t: string; d: string; icon: string };
 
@@ -33,7 +39,11 @@ function fmtMs(ms: number) {
 
 export function Processing() {
   const router = useRouter();
-  const session = useStore((s) => s.session);
+  const session = useAtomValue(sessionAtom);
+  const provider = useAtomValue(providerAtom);
+  const apiKey = useAtomValue(apiKeyAtom);
+  const setSession = useSetAtom(sessionAtom);
+  const setHistory = useSetAtom(historyAtom);
   const isMobile = useIsMobile();
   const audioName = session.audioName || "Requirement.m4a";
 
@@ -104,9 +114,8 @@ export function Processing() {
       {
         audioBlob: session.audioBlob,
         audioName: session.audioName,
-        provider: session.provider,
-        apiKey: session.apiKey,
-        depth: session.depth,
+        provider,
+        apiKey,
       },
       (ev) => {
         if (ev.type !== "stage") return;
@@ -141,9 +150,12 @@ export function Processing() {
 
         const a: Analysis = out.analysis;
         const id = out.id ?? crypto.randomUUID();
-        store.setAnalysis(a);
-        if (out.transcript) store.setSession({ transcript: out.transcript });
-        store.addHistory({
+        setSession((s) => ({
+          ...s,
+          analysis: a,
+          transcript: out.transcript ?? s.transcript,
+        }));
+        const item: HistoryItem = {
           id,
           title: a.title,
           client: a.client,
@@ -154,7 +166,8 @@ export function Processing() {
           mandayMax: a.mandayMax,
           features: a.features.length,
           tag: a.integrations[0]?.cat ?? "Project",
-        });
+        };
+        setHistory((prev) => [item, ...prev.filter((h) => h.id !== id)]);
         invalidate("projects"); // fresh History after a new run
         setTimeout(() => router.push(`/results/${id}`), 700);
       })

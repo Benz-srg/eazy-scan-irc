@@ -1,0 +1,102 @@
+{
+  "info": {
+    "name": "EazyScan — AI Manday Estimator",
+    "description": "ชุดทดสอบ API ของ EazyScan\n\nนำเข้า (Import) ไฟล์นี้ + ไฟล์ environment (EazyScan.postman_environment.json) เข้า Postman\n\nลำดับแนะนำ:\n1. Health — Whisper  (เช็คว่า Local Whisper พร้อม; ข้ามได้ถ้าใช้ OpenAI Whisper)\n2. Reanalyze (transcript -> analysis)  ← ทดสอบ AI ได้เร็วสุด ไม่ต้องมีไฟล์เสียง\n3. Analyze (audio, NDJSON stream)  ← flow เต็ม: แนบไฟล์ samples/sample-requirement-th.m4a\n4. Export DOCX / PDF\n5. Projects (history) — ต้องเปิด MongoDB\n\nหมายเหตุ: /api/analyze ตอบเป็น NDJSON (1 JSON ต่อบรรทัด) — บรรทัดสุดท้าย type=result",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health — Whisper (STT)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{whisperUrl}}/health", "host": ["{{whisperUrl}}"], "path": ["health"] },
+        "description": "เช็คว่า Local Whisper service พร้อม (คืน {status:ok, model})"
+      }
+    },
+    {
+      "name": "Reanalyze (transcript → analysis)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transcript\": \"ลูกค้าอยากได้ระบบจัดการร้านค้าออนไลน์ มีตะกร้าสินค้า ชำระเงินผ่านบัตรและพร้อมเพย์ จัดการสต็อก 3 สาขา แจ้งเตือน LINE และแดชบอร์ดยอดขาย\",\n  \"provider\": \"{{llmProvider}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/reanalyze", "host": ["{{baseUrl}}"], "path": ["api", "reanalyze"] },
+        "description": "วิเคราะห์ transcript ตรง ๆ ไม่ผ่าน STT → คืน { analysis } (JSON ก้อนเดียว, ผ่าน Zod schema). เร็วสุดสำหรับทดสอบคุณภาพ AI.\n\nprovider เว้นว่างได้ (ใช้ค่า server LLM_PROVIDER). ถ้าตั้ง openai ต้องมี OPENAI_API_KEY ฝั่ง server."
+      }
+    },
+    {
+      "name": "Analyze (audio → NDJSON stream)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "audio", "type": "file", "src": "", "description": "เลือกไฟล์ samples/sample-requirement-th.m4a (.mp3/.wav/.m4a)" },
+            { "key": "provider", "value": "{{sttProvider}}", "type": "text", "description": "local = Local Whisper · openai = OpenAI Whisper" },
+            { "key": "apiKey", "value": "", "type": "text", "description": "OpenAI key (เฉพาะเมื่อ provider=openai)" }
+          ]
+        },
+        "url": { "raw": "{{baseUrl}}/api/analyze", "host": ["{{baseUrl}}"], "path": ["api", "analyze"] },
+        "description": "อัปโหลดเสียง → STT → LLM. ตอบเป็น NDJSON stream:\n- {type:\"job\", id}\n- {type:\"stage\", key, state, ms} หลายบรรทัด\n- บรรทัดสุดท้าย {type:\"result\", analysis, transcript, audioUrl, id}\n\nแนบไฟล์ที่ฟิลด์ audio (เลือก samples/sample-requirement-th.m4a). Postman จะแสดงทุกบรรทัดเมื่อ stream จบ."
+      }
+    },
+    {
+      "name": "Export — DOCX",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"client\": \"บริษัท ตัวอย่าง\",\n  \"title\": \"ระบบจัดการร้านค้าออนไลน์\",\n  \"confidence\": 70,\n  \"evidence\": \"ลูกค้าอยากได้ระบบจัดการร้านค้าออนไลน์\",\n  \"mandayMin\": 40,\n  \"mandayMax\": 65,\n  \"summary\": { \"overview\": \"ระบบ e-commerce รวมศูนย์\", \"goals\": [\"รวมสต็อก\", \"ขายออนไลน์\"], \"scale\": \"SME\", \"timeline\": \"3-4 เดือน\" },\n  \"features\": [{ \"name\": \"จัดการสินค้า\", \"en\": \"Product\", \"icon\": \"package\", \"desc\": \"CRUD สินค้า\", \"est\": \"5-6 วัน\", \"impact\": \"high\" }],\n  \"manday\": [{ \"module\": \"จัดการสินค้า\", \"min\": 5, \"max\": 6, \"note\": \"CRUD\" }],\n  \"risks\": [{ \"title\": \"Sync สต็อก\", \"level\": \"สูง\", \"desc\": \"race condition\" }],\n  \"assumptions\": [\"ใช้ payment gateway สำเร็จรูป\"],\n  \"missing\": [{ \"q\": \"งบเท่าไร\", \"why\": \"กำหนด MVP\" }],\n  \"questions\": [\"ช่องทางขายปัจจุบัน?\"],\n  \"dependencies\": [{ \"name\": \"LINE API\", \"note\": \"ต้องมี OA\", \"icon\": \"message-circle\" }],\n  \"integrations\": [{ \"name\": \"OpenAI\", \"cat\": \"AI\", \"icon\": \"sparkles\" }]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/export/docx", "host": ["{{baseUrl}}"], "path": ["api", "export", "docx"] },
+        "description": "ส่ง Analysis object → ได้ไฟล์ .docx (Save Response → Save to a file)"
+      }
+    },
+    {
+      "name": "Export — PDF",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"client\": \"บริษัท ตัวอย่าง\",\n  \"title\": \"ระบบจัดการร้านค้าออนไลน์\",\n  \"confidence\": 70,\n  \"evidence\": \"ลูกค้าอยากได้ระบบจัดการร้านค้าออนไลน์\",\n  \"mandayMin\": 40,\n  \"mandayMax\": 65,\n  \"summary\": { \"overview\": \"ระบบ e-commerce รวมศูนย์\", \"goals\": [\"รวมสต็อก\"], \"scale\": \"SME\", \"timeline\": \"3-4 เดือน\" },\n  \"features\": [{ \"name\": \"จัดการสินค้า\", \"en\": \"Product\", \"icon\": \"package\", \"desc\": \"CRUD\", \"est\": \"5-6 วัน\", \"impact\": \"high\" }],\n  \"manday\": [{ \"module\": \"จัดการสินค้า\", \"min\": 5, \"max\": 6, \"note\": \"CRUD\" }],\n  \"risks\": [{ \"title\": \"Sync\", \"level\": \"สูง\", \"desc\": \"race\" }],\n  \"assumptions\": [\"payment gateway สำเร็จรูป\"],\n  \"missing\": [{ \"q\": \"งบ?\", \"why\": \"MVP\" }],\n  \"questions\": [\"ช่องทางขาย?\"],\n  \"dependencies\": [{ \"name\": \"LINE\", \"note\": \"OA\", \"icon\": \"message-circle\" }],\n  \"integrations\": [{ \"name\": \"OpenAI\", \"cat\": \"AI\", \"icon\": \"sparkles\" }]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/export/pdf", "host": ["{{baseUrl}}"], "path": ["api", "export", "pdf"] },
+        "description": "ส่ง Analysis object → ได้ไฟล์ .pdf"
+      }
+    },
+    {
+      "name": "Projects — list (history)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/projects", "host": ["{{baseUrl}}"], "path": ["api", "projects"] },
+        "description": "ประวัติทั้งหมด (ต้องเปิด MongoDB; ไม่มี DB → {items: []})"
+      }
+    },
+    {
+      "name": "Projects — get by id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "projects", "{{projectId}}"] },
+        "description": "ดึงผลวิเคราะห์ตาม id (ตั้งค่า projectId ใน environment)"
+      }
+    },
+    {
+      "name": "Audio — download/play",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/audio/{{audioFile}}", "host": ["{{baseUrl}}"], "path": ["api", "audio", "{{audioFile}}"] },
+        "description": "ไฟล์เสียงที่บันทึก (ชื่อเป็น uuid.ext จากผลลัพธ์ analyze)"
+      }
+    }
+  ],
+  "variable": []
+}

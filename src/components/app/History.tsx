@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon, Btn, Card, Tag } from "@/components/ui/primitives";
 import { TopBar } from "@/components/app/AppShell";
-import { store, useStore } from "@/lib/store";
+import { useAtom } from "jotai";
+import { historyAtom } from "@/lib/atoms";
 import { useSWR, mutate, invalidate } from "@/lib/swr";
 import { useIsMobile } from "@/lib/useMediaQuery";
 import type { HistoryItem } from "@/lib/types";
@@ -21,7 +22,7 @@ type Sort = "date" | "name" | "manday";
 export function History() {
   const router = useRouter();
   const isMobile = useIsMobile();
-  const items = useStore((s) => s.history);
+  const [items, setItems] = useAtom(historyAtom);
   const [q, setQ] = useState("");
   const [tag, setTag] = useState("all");
   const [sort, setSort] = useState<Sort>("date");
@@ -36,7 +37,7 @@ export function History() {
   // (no-DB mode → /api/projects returns []).
   const { data: projects } = useSWR<HistoryItem[]>("projects", fetchProjects);
   useEffect(() => {
-    if (projects?.length) store.setHistory(projects);
+    if (projects?.length) setItems(projects);
   }, [projects]);
 
   // stop any playing preview audio when leaving the page
@@ -77,7 +78,10 @@ export function History() {
     setMenuId(null);
   };
   const saveEdit = () => {
-    if (editId) store.renameHistory(editId, editVal);
+    if (editId)
+      setItems((arr) =>
+        arr.map((x) => (x.id === editId ? { ...x, title: editVal } : x)),
+      );
     setEditId(null);
   };
 
@@ -491,7 +495,7 @@ export function History() {
                             />
                             <button
                               onClick={() => {
-                                store.removeHistory(h.id);
+                                setItems((arr) => arr.filter((x) => x.id !== h.id));
                                 setMenuId(null);
                                 fetch(`/api/projects/${h.id}`, {
                                   method: "DELETE",

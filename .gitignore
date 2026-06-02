@@ -52,3 +52,8 @@ ref-*.png
 
 # local session/config
 .claude/
+
+# test artifacts
+/test-results
+/playwright-report
+/coverage

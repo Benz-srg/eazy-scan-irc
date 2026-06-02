@@ -16,7 +16,7 @@ import {
 import { TopBar } from "@/components/app/AppShell";
 import { PROMPTS } from "@/lib/sample-data";
 import { exportDoc } from "@/lib/export-client";
-import { apiKeyAtom, depthAtom } from "@/lib/atoms";
+import { apiKeyAtom } from "@/lib/atoms";
 import { invalidate } from "@/lib/swr";
 import { useIsMobile } from "@/lib/useMediaQuery";
 import { AnalysisSchema, type Analysis } from "@/lib/types";
@@ -989,7 +989,6 @@ function ReanalyzeBar({
   onResult: (a: Analysis) => void;
 }) {
   const apiKey = useAtomValue(apiKeyAtom);
-  const depth = useAtomValue(depthAtom);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState(false);
 
@@ -1003,7 +1002,6 @@ function ReanalyzeBar({
         body: JSON.stringify({
           transcript,
           provider,
-          depth,
           id: id !== "sample" ? id : undefined,
           apiKey: provider === "openai" ? apiKey : undefined,
         }),
