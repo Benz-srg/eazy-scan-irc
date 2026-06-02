@@ -17,6 +17,7 @@ export type AnalyzeOutcome = {
   source: "api" | "sample";
   audioUrl?: string;
   id?: string;
+  transcript?: string;
   timing?: { sttMs: number; llmMs: number; finMs?: number; provider: string };
 };
 
@@ -55,6 +56,7 @@ export async function runAnalysis(
       analysis?: unknown;
       id?: string;
       audioUrl?: string;
+      transcript?: string;
       timing?: AnalyzeOutcome["timing"];
     };
     const reader = res.body.getReader();
@@ -105,6 +107,7 @@ export async function runAnalysis(
       source: "api",
       audioUrl: r.audioUrl,
       id: r.id,
+      transcript: r.transcript,
       timing: r.timing,
     };
   } catch {

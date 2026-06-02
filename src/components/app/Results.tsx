@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useAtomValue } from "jotai";
 import {
   Icon,
   Btn,
@@ -15,7 +16,8 @@ import {
 import { TopBar } from "@/components/app/AppShell";
 import { PROMPTS } from "@/lib/sample-data";
 import { exportDoc } from "@/lib/export-client";
-import type { Analysis } from "@/lib/types";
+import { apiKeyAtom, depthAtom } from "@/lib/atoms";
+import { AnalysisSchema, type Analysis } from "@/lib/types";
 
 type Props = {
   analysis: Analysis;
@@ -23,6 +25,7 @@ type Props = {
   duration?: string;
   audioName?: string;
   audioUrl?: string;
+  transcript?: string;
 };
 
 function ResultHero({
@@ -383,6 +386,33 @@ function FeaturesCard({ a }: { a: Analysis }) {
                     {f.en}
                   </div>
                 </div>
+                {/* manday estimate — top-right for clear scanning */}
+                <div
+                  style={{
+                    flex: "none",
+                    textAlign: "right",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: 1,
+                  }}
+                >
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 800,
+                      color: "var(--brand-ink)",
+                      lineHeight: 1,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {f.est.replace(/\s*วัน\s*$/, "").replace(/\s*days?\s*$/i, "")}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: "var(--faint)", fontWeight: 600 }}>
+                    วัน
+                  </div>
+                </div>
               </div>
               <p
                 style={{
@@ -394,17 +424,7 @@ function FeaturesCard({ a }: { a: Analysis }) {
               >
                 {f.desc}
               </p>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 8,
-                }}
-              >
-                <Tag color="var(--ink-2)" bg="var(--surface)" icon="clock" size={12}>
-                  {f.est}
-                </Tag>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Tag color={im.color} bg={im.bg} size={12}>
                   {im.label}
                 </Tag>
@@ -923,14 +943,115 @@ function ExportModal({
   );
 }
 
+function ReanalyzeBar({
+  transcript,
+  id,
+  onResult,
+}: {
+  transcript: string;
+  id: string;
+  onResult: (a: Analysis) => void;
+}) {
+  const apiKey = useAtomValue(apiKeyAtom);
+  const depth = useAtomValue(depthAtom);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState(false);
+
+  const rerun = async (provider: string) => {
+    setBusy(provider);
+    setErr(false);
+    try {
+      const res = await fetch("/api/reanalyze", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          transcript,
+          provider,
+          depth,
+          id: id !== "sample" ? id : undefined,
+          apiKey: provider === "openai" ? apiKey : undefined,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const json = await res.json();
+      const parsed = AnalysisSchema.safeParse(json.analysis);
+      if (!parsed.success) throw new Error();
+      onResult(parsed.data);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setErr(true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const opts = [
+    { id: "claude-cli", t: "Claude", d: "วิเคราะห์ใหม่ด้วย Claude", icon: "sparkles" },
+    { id: "openai", t: "OpenAI", d: "ลองด้วย GPT (ต้องมี API key)", icon: "bot" },
+  ];
+
+  return (
+    <Card pad={22}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 13, marginBottom: 14 }}>
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 12,
+            background: "var(--grad-soft)",
+            color: "var(--brand-ink)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flex: "none",
+          }}
+        >
+          <Icon name="refresh-cw" size={21} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700 }}>ยังไม่ถูกใจผลวิเคราะห์?</h3>
+          <p style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 2 }}>
+            วิเคราะห์ transcript เดิมใหม่ด้วย AI อื่น (ไม่ต้องถอดเสียงซ้ำ)
+          </p>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {opts.map((o) => (
+          <Btn
+            key={o.id}
+            variant="ghost"
+            icon={busy === o.id ? "loader-circle" : o.icon}
+            onClick={() => rerun(o.id)}
+            disabled={busy !== null}
+          >
+            {busy === o.id ? "กำลังวิเคราะห์ใหม่…" : `วิเคราะห์ด้วย ${o.t}`}
+          </Btn>
+        ))}
+      </div>
+      {err && (
+        <p style={{ fontSize: 13, color: "var(--rose)", marginTop: 10, display: "flex", gap: 6, alignItems: "center" }}>
+          <Icon name="alert-triangle" size={14} /> วิเคราะห์ใหม่ไม่สำเร็จ — ตรวจ API key หรือลองอีกครั้ง
+        </p>
+      )}
+    </Card>
+  );
+}
+
 export function Results({
-  analysis,
+  analysis: initialAnalysis,
+  id,
   duration = "—",
   audioName = "requirement.m4a",
   audioUrl,
+  transcript,
 }: Props) {
   const router = useRouter();
   const [exp, setExp] = useState(false);
+  const [analysis, setAnalysis] = useState<Analysis>(initialAnalysis);
+
+  // keep in sync when the page hydrates a different record (history/DB)
+  useEffect(() => setAnalysis(initialAnalysis), [initialAnalysis]);
+
   return (
     <>
       <TopBar
@@ -992,6 +1113,11 @@ export function Results({
           <div className="fadeUp" style={{ animationDelay: ".2s" }}>
             <DepsIntegrations a={analysis} />
           </div>
+          {transcript && (
+            <div className="fadeUp" style={{ animationDelay: ".22s" }}>
+              <ReanalyzeBar transcript={transcript} id={id} onResult={setAnalysis} />
+            </div>
+          )}
           <div
             style={{
               display: "flex",

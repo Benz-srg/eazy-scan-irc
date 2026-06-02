@@ -14,6 +14,7 @@ type SessionState = {
   provider: Provider;
   apiKey: string;
   depth: "fast" | "deep";
+  transcript: string;
   analysis: Analysis | null;
 };
 
@@ -30,6 +31,7 @@ const emptySession: SessionState = {
   provider: "local",
   apiKey: "",
   depth: "fast",
+  transcript: "",
   analysis: null,
 };
 

@@ -7,7 +7,12 @@ import { AnalysisSchema, type Analysis } from "@/lib/types";
 import { buildSystemPrompt, buildUserPrompt } from "./prompt";
 import { analyzeWithClaudeCli, type Depth } from "./analyze-claude";
 
-export type AnalyzeOpts = { apiKey?: string; depth?: Depth };
+export type AnalyzeOpts = {
+  apiKey?: string;
+  depth?: Depth;
+  /** Overrides LLM_PROVIDER for this call (used by re-analyze). */
+  provider?: string;
+};
 
 /**
  * Analysis via an AI SDK provider (OpenAI / Anthropic API / Gemini).
@@ -88,7 +93,11 @@ export async function analyzeTranscript(
   transcript: string,
   opts: AnalyzeOpts = {},
 ): Promise<Analysis> {
-  const provider = (process.env.LLM_PROVIDER || "claude-cli").toLowerCase();
+  const provider = (
+    opts.provider ||
+    process.env.LLM_PROVIDER ||
+    "claude-cli"
+  ).toLowerCase();
   const deep = (opts.depth ?? "fast") === "deep";
 
   if (provider === "claude-cli") {

@@ -37,6 +37,9 @@ export default function ResultsPage({
   const [audioUrl, setAudioUrl] = useState<string | undefined>(
     fromSession ? session.audioUrl ?? undefined : histItem?.audioUrl,
   );
+  const [transcript, setTranscript] = useState<string | undefined>(
+    fromSession ? session.transcript || undefined : undefined,
+  );
 
   // for DB-backed history items, hydrate the real record by id
   useEffect(() => {
@@ -51,6 +54,7 @@ export default function ResultsPage({
           setAnalysis(parsed.data);
           if (json.audioName) setAudioName(json.audioName);
           if (json.audioUrl) setAudioUrl(json.audioUrl);
+          if (json.transcript) setTranscript(json.transcript);
         }
       })
       .catch(() => {});
@@ -66,6 +70,7 @@ export default function ResultsPage({
       duration={duration}
       audioName={audioName}
       audioUrl={audioUrl}
+      transcript={transcript}
     />
   );
 }

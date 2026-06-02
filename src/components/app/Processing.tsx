@@ -129,6 +129,7 @@ export function Processing() {
         const a: Analysis = out.analysis;
         const id = out.id ?? crypto.randomUUID();
         store.setAnalysis(a);
+        if (out.transcript) store.setSession({ transcript: out.transcript });
         store.addHistory({
           id,
           title: a.title,
