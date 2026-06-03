@@ -23,6 +23,9 @@ model Project {
   features   Int      @default(0)
   tag        String   @default("Project")
   analysis   Json?
+  // estimated finish time, set when a "processing" row is created so History can
+  // show an ETA; approximate — does not account for concurrency-queue wait
+  estFinishAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

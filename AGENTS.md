@@ -54,4 +54,9 @@ AI Manday Estimator. Built faithfully from a Claude Design handoff (EazyScan.htm
   DB write routes (`/api/analyze` create, `/api/projects/[id]` delete, `/api/reanalyze` update) are
   therefore unauthenticated — a known IDOR gap. When auth lands, add `userId` to `Project` and scope
   EVERY DB query by owner together (`where: { id, userId }`), returning 401/403 otherwise.
+- `/api/analyze` creates the `processing` Project row BEFORE compute and keeps running even if the
+  client disconnects (`send()` swallows enqueue errors), so a job started then abandoned still reaches
+  `done`/`error` and surfaces in History (which polls every 4s while any row is `processing`). The
+  Processing page only auto-opens results when the user is still on `/processing` (no late redirect).
+  Known gap: if the server process itself dies mid-job, that row stays `processing` forever (no reaper).
 - Run `pnpm typecheck` and `pnpm build` before declaring done.

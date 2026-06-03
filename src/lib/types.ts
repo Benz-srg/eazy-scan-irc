@@ -93,4 +93,5 @@ export type HistoryItem = {
   features: number;
   tag: string;
   status?: JobStatus;
+  estFinishAt?: string; // ISO; only on processing rows — approximate ETA
 };

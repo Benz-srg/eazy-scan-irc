@@ -29,6 +29,8 @@ export async function GET() {
       features: r.features,
       tag: r.tag,
       status: r.status,
+      estFinishAt:
+        r.status === "processing" ? r.estFinishAt?.toISOString() : undefined,
     }));
     return NextResponse.json(
       { items },

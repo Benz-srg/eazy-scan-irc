@@ -77,11 +77,11 @@ function LandingNav({
         top: 0,
         zIndex: "var(--z-sticky)" as unknown as number,
         padding: "0 24px",
-        background: scrolled ? "rgba(245,246,251,.82)" : "transparent",
-        backdropFilter: scrolled ? "saturate(180%) blur(16px)" : "none",
+        background: scrolled ? "rgba(245,246,251,.9)" : "rgba(245,246,251,.72)",
+        backdropFilter: "saturate(180%) blur(16px)",
         borderBottom: scrolled
           ? "1px solid var(--line)"
-          : "1px solid transparent",
+          : "1px solid var(--line-2)",
         transition: "all .3s",
       }}
     >

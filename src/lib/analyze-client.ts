@@ -9,6 +9,7 @@ export type StageKey = "upload" | "transcribe" | "analyze" | "finalize";
 export type StageEvent =
   | { type: "stage"; key: StageKey; state: "start" }
   | { type: "stage"; key: StageKey; state: "done"; ms: number; preview?: string }
+  | { type: "queue"; message?: string; queued?: number }
   | { type: "result"; id?: string; audioUrl?: string }
   | { type: "error"; message: string };
 
@@ -28,6 +29,7 @@ type Session = {
   provider: "local" | "openai";
   apiKey: string;
   depth?: "fast" | "deep";
+  durationSec?: number;
 };
 
 /**
@@ -50,6 +52,8 @@ export async function runAnalysis(
     fd.append("audio", session.audioBlob, session.audioName || "audio.webm");
     fd.append("provider", session.provider);
     fd.append("depth", session.depth ?? "fast");
+    if (session.durationSec && session.durationSec > 0)
+      fd.append("duration", String(session.durationSec));
     if (session.provider === "openai" && session.apiKey)
       fd.append("apiKey", session.apiKey);
 
@@ -82,7 +86,7 @@ export async function runAnalysis(
         result = ev as ResultMsg;
       } else if (ev.type === "error") {
         errMsg = String(ev.message ?? "analyze error");
-      } else if (ev.type === "stage" && onStage) {
+      } else if ((ev.type === "stage" || ev.type === "queue") && onStage) {
         onStage(ev as StageEvent);
       }
     };

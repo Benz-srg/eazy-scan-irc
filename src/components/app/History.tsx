@@ -7,6 +7,7 @@ import { TopBar } from "@/components/app/AppShell";
 import { useAtom } from "jotai";
 import { historyAtom } from "@/lib/atoms";
 import { useSWR, mutate, invalidate } from "@/lib/swr";
+import { fmtClock } from "@/lib/estimate";
 import { useIsMobile } from "@/lib/useMediaQuery";
 import type { HistoryItem } from "@/lib/types";
 
@@ -275,9 +276,15 @@ export function History() {
                         background:
                           h.status === "error"
                             ? "var(--rose-soft)"
-                            : "var(--grad-soft)",
+                            : h.status === "processing"
+                              ? "var(--amber-soft)"
+                              : "var(--grad-soft)",
                         color:
-                          h.status === "error" ? "var(--rose)" : "var(--brand-ink)",
+                          h.status === "error"
+                            ? "var(--rose)"
+                            : h.status === "processing"
+                              ? "var(--amber)"
+                              : "var(--brand-ink)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -354,10 +361,12 @@ export function History() {
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: isMobile ? 12 : 16,
+                        gap: isMobile ? 8 : 16,
+                        rowGap: isMobile ? 8 : undefined,
                         flex: "none",
-                        justifyContent: isMobile ? "flex-end" : "flex-start",
-                        paddingLeft: isMobile ? 64 : 0,
+                        flexWrap: isMobile ? "wrap" : "nowrap",
+                        justifyContent: "flex-start",
+                        paddingLeft: 0,
                       }}
                       className="hist-meta"
                     >
@@ -384,15 +393,28 @@ export function History() {
                         </button>
                       )}
                       {h.status === "processing" ? (
-                        <Tag color="var(--brand-ink)" bg="var(--brand-soft)" icon="loader-circle" size={12}>
-                          กำลังประมวลผล
-                        </Tag>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <Tag color="var(--amber)" bg="var(--amber-soft)" icon="loader-circle" size={12}>
+                            กำลังประมวลผล
+                          </Tag>
+                          {h.estFinishAt && (
+                            <span style={{ fontSize: 12.5, color: "var(--faint)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <Icon name="clock" size={13} />
+                              {Date.parse(h.estFinishAt) > Date.now()
+                                ? `เสร็จ ~${fmtClock(new Date(h.estFinishAt))}`
+                                : "ใกล้เสร็จ…"}
+                            </span>
+                          )}
+                        </div>
                       ) : h.status === "error" ? (
                         <Tag color="var(--rose)" bg="var(--rose-soft)" icon="triangle-alert" size={12}>
                           ผิดพลาด
                         </Tag>
                       ) : (
                         <>
+                          <Tag color="var(--green)" bg="var(--green-soft)" icon="circle-check" size={12}>
+                            เสร็จสิ้น
+                          </Tag>
                           <Tag size={12}>{h.tag}</Tag>
                           <div style={{ textAlign: "right" }}>
                             <div

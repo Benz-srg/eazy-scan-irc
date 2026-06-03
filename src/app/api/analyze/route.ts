@@ -2,6 +2,8 @@ import { transcribe } from "@/lib/server/transcribe";
 import { analyzeTranscript } from "@/lib/server/analyze";
 import { saveAudio } from "@/lib/server/storage";
 import { getDb } from "@/lib/server/db";
+import { acquireSlot, slots, QueueFullError } from "@/lib/server/concurrency";
+import { estimateTotalSec } from "@/lib/estimate";
 
 export const runtime = "nodejs";
 // large-v3 STT (~280s on CPU) + LLM can exceed 5min; allow headroom locally.
@@ -24,6 +26,7 @@ export async function POST(req: Request) {
   const apiKey = (form.get("apiKey") as string) || undefined;
   const depth: "fast" | "deep" =
     (form.get("depth") as string) === "deep" ? "deep" : "fast";
+  const durationSec = Number(form.get("duration")) || 0;
   const filename =
     (form.get("audio") as File)?.name || `requirement-${Date.now()}.webm`;
 
@@ -31,12 +34,21 @@ export async function POST(req: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (obj: unknown) =>
-        controller.enqueue(enc.encode(JSON.stringify(obj) + "\n"));
+      // Swallow enqueue failures: if the client disconnects (tab closed mid-run)
+      // the controller errors, but the pipeline below MUST keep running so the
+      // job still reaches done/error in the DB and shows up in History.
+      const send = (obj: unknown) => {
+        try {
+          controller.enqueue(enc.encode(JSON.stringify(obj) + "\n"));
+        } catch {
+          /* client gone — keep computing */
+        }
+      };
       const fail = (message: string, status = "error") => {
         send({ type: status === "error" ? "error" : "warn", message });
       };
 
+      let release: (() => void) | null = null;
       try {
         if (!(audio instanceof Blob)) {
           fail("ไม่พบไฟล์เสียง");
@@ -74,6 +86,14 @@ export async function POST(req: Request) {
                 audioPath: stored.filename,
                 status: "processing",
                 tag: "Processing",
+                estFinishAt: new Date(
+                  Date.now() +
+                    estimateTotalSec(
+                      durationSec,
+                      provider === "openai" ? "openai" : "local",
+                    ) *
+                      1000,
+                ),
                 analysis: undefined,
               },
             });
@@ -93,6 +113,24 @@ export async function POST(req: Request) {
         };
         send({ type: "job", id: jobId, audioUrl: stored.url });
         send({ type: "stage", key: "upload", state: "done", ms: 0 });
+
+        // 1b. wait for a compute slot so concurrent uploads can't peg the host.
+        // The row already exists as "processing", so a queued job still shows in
+        // History; queued jobs are not cancelled if the client leaves.
+        try {
+          const s = slots();
+          if (s.active >= s.max)
+            send({ type: "queue", message: "กำลังรอคิวประมวลผล", queued: s.queued + 1 });
+          release = await acquireSlot();
+        } catch (e) {
+          if (e instanceof QueueFullError) {
+            await markError(e.message);
+            fail(e.message);
+            controller.close();
+            return;
+          }
+          throw e;
+        }
 
         // 2. transcribe
         send({ type: "stage", key: "transcribe", state: "start" });
@@ -183,7 +221,12 @@ export async function POST(req: Request) {
       } catch (err) {
         fail(err instanceof Error ? err.message : "วิเคราะห์ไม่สำเร็จ");
       } finally {
-        controller.close();
+        release?.(); // free the compute slot for the next queued job
+        try {
+          controller.close();
+        } catch {
+          /* already errored/closed by a client disconnect */
+        }
       }
     },
   });

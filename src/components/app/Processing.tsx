@@ -12,6 +12,12 @@ import {
   apiKeyAtom,
 } from "@/lib/atoms";
 import { runAnalysis, type StageKey } from "@/lib/analyze-client";
+import {
+  estimateTotalSec,
+  estimateLlmSec,
+  fmtClock,
+  fmtRemain,
+} from "@/lib/estimate";
 import { invalidate } from "@/lib/swr";
 import { useIsMobile } from "@/lib/useMediaQuery";
 import type { Analysis, HistoryItem } from "@/lib/types";
@@ -59,6 +65,11 @@ export function Processing() {
   const [preview, setPreview] = useState<string>("");
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // ETA: anchored to the REAL transcribe-start event (a queued job hasn't begun
+  // computing yet, so counting from mount would lie), then re-tightened to the
+  // LLM-only estimate once STT actually finishes. null = no clock yet.
+  const [finishAt, setFinishAt] = useState<number | null>(null);
+  const [queued, setQueued] = useState(false);
 
   const startedRef = useRef(false);
   const navigatedRef = useRef(false);
@@ -98,7 +109,10 @@ export function Processing() {
           setDone(true);
           if (!navigatedRef.current) {
             navigatedRef.current = true;
-            setTimeout(() => router.push("/results/sample"), 600);
+            setTimeout(() => {
+              if (window.location.pathname === "/processing")
+                router.push("/results/sample");
+            }, 600);
           }
           return;
         }
@@ -116,14 +130,32 @@ export function Processing() {
         audioName: session.audioName,
         provider,
         apiKey,
+        durationSec: session.durationSec,
       },
       (ev) => {
+        if (ev.type === "queue") {
+          setQueued(true);
+          return;
+        }
         if (ev.type !== "stage") return;
-        if (ev.state === "start") markStart(ev.key);
-        else {
+        if (ev.state === "start") {
+          setQueued(false);
+          markStart(ev.key);
+          // anchor the ETA when STT compute actually begins (not at mount —
+          // the job may have waited in the queue). Need a known duration.
+          if (ev.key === "transcribe" && session.durationSec > 0)
+            setFinishAt(
+              Date.now() + estimateTotalSec(session.durationSec, provider) * 1000,
+            );
+        } else {
           markDone(ev.key, ev.ms);
-          if (ev.key === "transcribe" && "preview" in ev && ev.preview)
-            setPreview(ev.preview);
+          if (ev.key === "transcribe") {
+            if ("preview" in ev && ev.preview) setPreview(ev.preview);
+            // STT done → remaining is the LLM stage only (valid even if the
+            // upload's duration never resolved)
+            setFinishAt(Date.now() + (estimateLlmSec(session.durationSec) + 3) * 1000);
+          }
+          if (ev.key === "analyze") setFinishAt(Date.now() + 3000);
         }
       },
     )
@@ -169,7 +201,12 @@ export function Processing() {
         };
         setHistory((prev) => [item, ...prev.filter((h) => h.id !== id)]);
         invalidate("projects"); // fresh History after a new run
-        setTimeout(() => router.push(`/results/${id}`), 700);
+        // only auto-open results if the user is STILL waiting here — if they
+        // left (the job kept running server-side), don't yank them back later.
+        setTimeout(() => {
+          if (window.location.pathname === "/processing")
+            router.push(`/results/${id}`);
+        }, 700);
       })
       .catch((e) => {
         if (navigatedRef.current) return;
@@ -257,9 +294,15 @@ export function Processing() {
         title="กำลังวิเคราะห์"
         sub={audioName}
         right={
-          <Tag color="var(--brand-ink)" bg="var(--brand-soft)" icon="sparkles">
-            {done ? "เสร็จสิ้น" : "AI กำลังทำงาน"}
-          </Tag>
+          done ? (
+            <Tag color="var(--green)" bg="var(--green-soft)" icon="circle-check">
+              เสร็จสิ้น
+            </Tag>
+          ) : (
+            <Tag color="var(--amber)" bg="var(--amber-soft)" icon="sparkles">
+              AI กำลังทำงาน
+            </Tag>
+          )
         }
       />
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "22px 10px 56px" : "36px 24px 60px" }}>
@@ -314,6 +357,40 @@ export function Processing() {
                 ? "กำลังเปิดผลการวิเคราะห์ของคุณ…"
                 : "ระบบทำงานตามขั้นตอนจริง — เวลาที่ใช้แต่ละขั้นแสดงด้านล่าง"}
             </p>
+            {!done && !error && session.audioBlob && (
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 12,
+                  padding: "7px 14px",
+                  borderRadius: 999,
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  color: queued ? "var(--amber)" : "var(--brand-ink)",
+                  background: queued ? "var(--amber-soft)" : "var(--brand-soft)",
+                }}
+              >
+                <Icon
+                  name={queued ? "loader-circle" : "clock"}
+                  size={15}
+                  className={queued ? "spin" : ""}
+                />
+                {queued ? (
+                  "รอคิวประมวลผล — จะเริ่มเมื่อมีช่องว่าง"
+                ) : finishAt ? (
+                  <span>
+                    คาดว่าเสร็จ ~{fmtClock(new Date(finishAt))}{" "}
+                    <span style={{ color: "var(--faint)", fontWeight: 500 }}>
+                      · เหลือ {fmtRemain((finishAt - Date.now()) / 1000)}
+                    </span>
+                  </span>
+                ) : (
+                  "กำลังเริ่มประมวลผล…"
+                )}
+              </div>
+            )}
           </div>
 
           <Card pad={10} style={{ overflow: "hidden" }}>
