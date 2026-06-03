@@ -31,6 +31,7 @@ export async function GET() {
       status: r.status,
       estFinishAt:
         r.status === "processing" ? r.estFinishAt?.toISOString() : undefined,
+      durationMs: r.durationMs ?? undefined,
     }));
     return NextResponse.json(
       { items },

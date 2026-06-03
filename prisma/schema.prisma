@@ -26,6 +26,8 @@ model Project {
   // estimated finish time, set when a "processing" row is created so History can
   // show an ETA; approximate — does not account for concurrency-queue wait
   estFinishAt DateTime?
+  // actual STT+LLM compute time (ms), set on completion
+  durationMs Int?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

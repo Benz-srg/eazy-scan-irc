@@ -204,6 +204,7 @@ export async function POST(req: Request) {
                 mandayMax: analysis.mandayMax,
                 features: analysis.features.length,
                 tag: analysis.integrations[0]?.cat ?? "Project",
+                durationMs: sttMs + llmMs,
                 analysis,
               },
             });

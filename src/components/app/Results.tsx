@@ -129,11 +129,12 @@ function ResultHero({
                   display: "inline-flex",
                   gap: 6,
                   alignItems: "center",
-                  padding: "3px 11px",
+                  padding: "4px 13px",
                   borderRadius: 999,
-                  background: "rgba(255,255,255,.18)",
+                  background: "var(--green)",
                   color: "#fff",
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  boxShadow: "0 4px 12px rgba(16,185,129,.4)",
                 }}
               >
                 <Icon name="download" size={14} /> ดาวน์โหลดเสียง

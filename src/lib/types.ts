@@ -94,4 +94,5 @@ export type HistoryItem = {
   tag: string;
   status?: JobStatus;
   estFinishAt?: string; // ISO; only on processing rows — approximate ETA
+  durationMs?: number; // actual STT+LLM compute time, set on completion
 };

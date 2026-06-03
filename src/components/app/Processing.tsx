@@ -239,6 +239,9 @@ export function Processing() {
           mandayMax: a.mandayMax,
           features: a.features.length,
           tag: a.integrations[0]?.cat ?? "Project",
+          durationMs: out.timing
+            ? out.timing.sttMs + out.timing.llmMs
+            : undefined,
         };
         setHistory((prev) => [
           item,

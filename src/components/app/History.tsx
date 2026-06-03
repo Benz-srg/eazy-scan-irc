@@ -20,6 +20,12 @@ async function fetchProjects(): Promise<HistoryItem[]> {
 
 type Sort = "date" | "name" | "manday";
 
+function fmtDur(ms: number) {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s} วิ`;
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} นาที`;
+}
+
 export function History() {
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -276,7 +282,7 @@ export function History() {
                       gap: isMobile ? 12 : 16,
                     }}
                   >
-                   <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
+                   <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, paddingRight: isMobile ? 38 : 0 }}>
                     <div
                       style={{
                         width: 50,
@@ -363,6 +369,11 @@ export function History() {
                         <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
                           <Icon name="calendar" size={14} /> {h.date}
                         </span>
+                        {h.durationMs != null && (
+                          <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
+                            <Icon name="timer" size={14} /> ใช้เวลา {fmtDur(h.durationMs)}
+                          </span>
+                        )}
                       </div>
                     </div>
                    </div>
@@ -441,7 +452,15 @@ export function History() {
                           </div>
                         </>
                       )}
-                      <div style={{ position: "relative" }}>
+                      <div
+                        style={{
+                          // pin the kebab to the card's top-right on mobile so it
+                          // never wraps to a second line; inline on desktop
+                          position: isMobile ? "absolute" : "relative",
+                          top: isMobile ? 14 : undefined,
+                          right: isMobile ? 14 : undefined,
+                        }}
+                      >
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
