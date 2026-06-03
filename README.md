@@ -101,7 +101,7 @@ pnpm install && pnpm dev
 
 | `LLM_PROVIDER` | ต้องมี | ค่าใช้จ่าย | หมายเหตุ |
 |---|---|---|---|
-| `claude-cli` (default) | Claude Code CLI ล็อกอินบนเครื่อง | ตามแพ็กเกจ Claude | **ไม่ต้องมี API key** · รันใน Docker ไม่ได้ |
+| `claude-cli` (default) | Claude Code CLI ล็อกอินบนเครื่อง | ตามแพ็กเกจ Claude | **ไม่ต้องมี API key** · Docker default ไม่ใช้ (login ไม่ portable) |
 | `anthropic` | `ANTHROPIC_API_KEY` | จ่ายตาม API | Claude ผ่าน API ปกติ |
 | `gemini` | `GEMINI_API_KEY` | จ่ายตาม API | Google Gemini |
 | `openai` | `OPENAI_API_KEY` | จ่ายตาม API | ใช้ใน Docker เป็นค่า default |
@@ -111,6 +111,48 @@ pnpm install && pnpm dev
 > **Auto-fallback:** ถ้าตั้ง provider เป็น API (openai/anthropic/gemini) แต่ไม่มี key
 > และเครื่องมี **Claude Code CLI** ติดตั้ง+ล็อกอินอยู่ → ระบบจะใช้ CLI ให้อัตโนมัติ (ฟรี)
 > แทนที่จะ error. (ใน Docker ไม่มี CLI → ไม่ fallback)
+
+### ตัวอย่าง `.env.local` ต่อ provider (คัดลอกได้เลย)
+
+กฎเดียวที่ต้องจำ: **`LLM_PROVIDER` ต้องตรงกับ key ที่ใส่** · STT แยกจาก LLM (ตัวอย่างใช้ Local Whisper ฟรี) · `DATABASE_URL` ตัดออกได้ถ้าไม่อยากเก็บประวัติถาวร
+
+**1) `claude-cli` — ฟรี ไม่มี key** (ต้องล็อกอิน CLI บนเครื่องก่อน ดูหัวข้อถัดไป)
+```bash
+LLM_PROVIDER=claude-cli
+PYTHON_WHISPER_URL=http://localhost:8000
+DATABASE_URL=mongodb://localhost:27017/eazyscan?replicaSet=rs0&directConnection=true
+# CLAUDE_CLI_FAST_MODEL=claude-sonnet-4-6   # optional · ไม่ใส่ = haiku (เร็ว)
+```
+
+**2) `gemini`**
+```bash
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=AIza...
+PYTHON_WHISPER_URL=http://localhost:8000
+DATABASE_URL=mongodb://localhost:27017/eazyscan?replicaSet=rs0&directConnection=true
+# GEMINI_ANALYSIS_MODEL=gemini-2.5-flash    # optional
+```
+
+**3) `anthropic`** (Claude ผ่าน API key)
+```bash
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+PYTHON_WHISPER_URL=http://localhost:8000
+DATABASE_URL=mongodb://localhost:27017/eazyscan?replicaSet=rs0&directConnection=true
+# ANTHROPIC_ANALYSIS_MODEL=claude-haiku-4-5-20251001   # optional
+```
+
+**4) `openai`**
+```bash
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+PYTHON_WHISPER_URL=http://localhost:8000
+DATABASE_URL=mongodb://localhost:27017/eazyscan?replicaSet=rs0&directConnection=true
+# OPENAI_ANALYSIS_MODEL=gpt-4o-mini          # optional
+```
+
+> ⚠️ **กับดักที่เจอบ่อย:** ใส่ key อย่างเดียวไม่พอ — ต้องตั้ง `LLM_PROVIDER` ให้ตรงด้วย (ไม่งั้น default = `claude-cli`) · และ **ไม่มี** ตัวแปร `CLAUDE_CLI_MODEL` (โค้ดไม่อ่าน) ใช้ `CLAUDE_CLI_FAST_MODEL`/`CLAUDE_CLI_DEEP_MODEL` แทน
+> อยากใช้ **OpenAI Whisper** เป็น STT แทน Local: ใส่ key ใน UI (Settings) หรือ `OPENAI_API_KEY` ใน env — คนละส่วนกับ LLM
 
 **ความละเอียด (depth)** เป็นค่าฝั่งเซิร์ฟเวอร์ (ผู้ใช้ไม่ต้องเลือก — UI ให้เลือกแค่ STT):
 - ดีฟอลต์ **fast** = Haiku / Flash / gpt-4o-mini (ไวกว่า ~2 เท่า)
