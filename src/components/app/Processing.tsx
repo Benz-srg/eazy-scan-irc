@@ -74,6 +74,10 @@ export function Processing() {
   const startedRef = useRef(false);
   const navigatedRef = useRef(false);
   const activeStartRef = useRef(0);
+  // id of the optimistic "processing" row we add to History up front, so the
+  // job is visible there even with no DB (graceful degradation); reconciled to
+  // the final row on done/error.
+  const clientIdRef = useRef("");
 
   // live ticking timer for the active stage
   useEffect(() => {
@@ -98,6 +102,15 @@ export function Processing() {
       setStates((s) => ({ ...s, [key]: "done" }));
       setDurations((d) => ({ ...d, [key]: ms }));
     };
+    // flip the optimistic History row to "error" (no-DB visibility)
+    const markClientError = () =>
+      setHistory((prev) =>
+        prev.map((h) =>
+          h.id === clientIdRef.current
+            ? { ...h, status: "error", client: "ผิดพลาด", tag: "Error" }
+            : h,
+        ),
+      );
 
     // Demo path (no audio): run a brief animated sequence then show the sample.
     if (!session.audioBlob) {
@@ -123,6 +136,33 @@ export function Processing() {
       tick();
       return;
     }
+
+    // add an optimistic "processing" row to History immediately, so the job is
+    // visible there even if the user leaves and even with no DB.
+    const clientId = crypto.randomUUID();
+    clientIdRef.current = clientId;
+    setHistory((prev) => [
+      {
+        id: clientId,
+        title: audioName.replace(/\.[^.]+$/, ""),
+        client: "กำลังประมวลผล…",
+        audio: audioName,
+        audioUrl: session.audioUrl ?? undefined,
+        date: THAI_DATE.format(new Date()),
+        mandayMin: 0,
+        mandayMax: 0,
+        features: 0,
+        tag: "Processing",
+        status: "processing",
+        estFinishAt:
+          session.durationSec > 0
+            ? new Date(
+                Date.now() + estimateTotalSec(session.durationSec, provider) * 1000,
+              ).toISOString()
+            : undefined,
+      },
+      ...prev.filter((h) => h.id !== clientId),
+    ]);
 
     runAnalysis(
       {
@@ -166,6 +206,7 @@ export function Processing() {
         if (out.source === "error" || !out.analysis) {
           setActiveKey(null);
           setError(out.error ?? "วิเคราะห์ไม่สำเร็จ");
+          markClientError();
           invalidate("projects"); // surface the error row in History too
           return;
         }
@@ -199,7 +240,10 @@ export function Processing() {
           features: a.features.length,
           tag: a.integrations[0]?.cat ?? "Project",
         };
-        setHistory((prev) => [item, ...prev.filter((h) => h.id !== id)]);
+        setHistory((prev) => [
+          item,
+          ...prev.filter((h) => h.id !== id && h.id !== clientIdRef.current),
+        ]);
         invalidate("projects"); // fresh History after a new run
         // only auto-open results if the user is STILL waiting here — if they
         // left (the job kept running server-side), don't yank them back later.
@@ -212,6 +256,7 @@ export function Processing() {
         if (navigatedRef.current) return;
         setActiveKey(null);
         setError(e instanceof Error ? e.message : "วิเคราะห์ไม่สำเร็จ");
+        markClientError();
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
