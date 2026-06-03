@@ -221,12 +221,18 @@ export function Processing() {
   const C = 2 * Math.PI * 42;
 
   const isLlmError = !!error && /LLM/.test(error);
+  const isSttError = !!error && /STT/.test(error);
+  const errTitle = isSttError
+    ? "ถอดเสียงไม่สำเร็จ"
+    : isLlmError
+      ? "เชื่อมต่อ AI วิเคราะห์ไม่ได้"
+      : "วิเคราะห์ไม่สำเร็จ";
 
   if (error) {
     return (
       <>
         <TopBar
-          title={isLlmError ? "เชื่อมต่อ AI วิเคราะห์ไม่ได้" : "วิเคราะห์ไม่สำเร็จ"}
+          title={errTitle}
           sub={audioName}
           right={
             <Tag color="var(--rose)" bg="var(--rose-soft)" icon="triangle-alert">
@@ -251,13 +257,13 @@ export function Processing() {
             >
               <Icon name="triangle-alert" size={34} />
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 800 }}>
-              {isLlmError ? "เชื่อมต่อ AI วิเคราะห์ไม่ได้" : "วิเคราะห์ไม่สำเร็จ"}
-            </h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800 }}>{errTitle}</h2>
             <p style={{ fontSize: 15, color: "var(--muted)", marginTop: 8, lineHeight: 1.65 }}>
-              {isLlmError
-                ? "ระบบถอดเสียงสำเร็จ แต่เชื่อมต่อเครื่องมือวิเคราะห์ AI (LLM) ไม่ได้ จึงยังไม่ได้ผลลัพธ์"
-                : "ระบบถอดเสียง/วิเคราะห์มีปัญหา จึงยังไม่ได้ผลลัพธ์จริง (ระบบจะไม่แสดงข้อมูลตัวอย่างแทน เพื่อไม่ให้เข้าใจผิด)"}
+              {isSttError
+                ? "แปลงเสียงเป็นข้อความ (STT) ไม่สำเร็จ จึงยังไม่ได้เริ่มวิเคราะห์ — ดูรายละเอียดและวิธีแก้ด้านล่าง"
+                : isLlmError
+                  ? "ระบบถอดเสียงสำเร็จ แต่เชื่อมต่อเครื่องมือวิเคราะห์ AI (LLM) ไม่ได้ จึงยังไม่ได้ผลลัพธ์"
+                  : "ระบบถอดเสียง/วิเคราะห์มีปัญหา จึงยังไม่ได้ผลลัพธ์จริง (ระบบจะไม่แสดงข้อมูลตัวอย่างแทน เพื่อไม่ให้เข้าใจผิด)"}
             </p>
             <div
               className="mono"
