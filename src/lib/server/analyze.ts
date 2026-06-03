@@ -67,6 +67,20 @@ export function llmPreflight(opts: AnalyzeOpts = {}): string | null {
   return `ยังไม่ได้ตั้งค่าเครื่องมือวิเคราะห์ AI (LLM) — ${hintFor(provider)}`;
 }
 
+/** One-line summary of the resolved LLM config, for the startup banner. */
+export function llmStartupInfo(): string {
+  const provider = resolveProvider({});
+  if (provider === "claude-cli") {
+    return claudeCliAvailable()
+      ? `claude-cli · ${modelForDepth("fast")} (host login, no key)`
+      : "claude-cli · ⚠ CLI not found or not logged in — analyze will fail";
+  }
+  if (hasKey(provider, {})) return `${provider} · API key set`;
+  if (claudeCliAvailable())
+    return `${provider} · ⚠ no key → falling back to claude-cli`;
+  return `${provider} · ⚠ no key and no Claude CLI — analyze will fail`;
+}
+
 /** Turn a raw provider/CLI failure into a clear, actionable Thai message. */
 function llmError(provider: string, err: unknown): LlmUnavailableError {
   const detail = err instanceof Error ? err.message : String(err);
