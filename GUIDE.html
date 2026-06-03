@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>EazyScan — คู่มือติดตั้งและใช้งาน</title>
+<meta name="description" content="คู่มือติดตั้งและใช้งาน EazyScan — รัน Docker คำสั่งเดียว หรือ local (Whisper + Claude CLI/Gemini/OpenAI), ตั้งค่า .env, ลำดับการทำงานของระบบ และแก้ปัญหาที่พบบ่อย" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='32' y2='32'><stop stop-color='%236366f1'/><stop offset='1' stop-color='%2360a5fa'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><g stroke='white' stroke-width='2.4' stroke-linecap='round'><path d='M10 13v6M14 9v14M18 11v10M22 14v4'/></g></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -117,9 +119,35 @@
 
   footer{text-align:center;padding:40px 22px 56px;color:var(--faint);font-size:13.5px;border-top:1px solid var(--line);margin-top:30px;}
   hr{border:none;border-top:1px solid var(--line);margin:0;}
+
+  /* sequence (sq-) — cute on-brand flow */
+  .sq-ic{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block;}
+  .sq-av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.7);}
+  .sq-user{background:#eef2f7;color:#64748b;} .sq-web{background:#eceefe;color:#6366f1;} .sq-api{background:#e3edff;color:#2563eb;}
+  .sq-db{background:#e3f7ef;color:#10b981;} .sq-stt{background:#fdf2dd;color:#d9830a;} .sq-llm{background:#f0eafe;color:#8b5cf6;}
+  .sq-legend{display:flex;flex-wrap:wrap;gap:12px 16px;margin:14px 0 2px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;}
+  .sq-leg{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--ink-2);}
+  .sq-seq{padding:6px 12px 12px !important;}
+  .sq-row{display:flex;gap:13px;align-items:flex-start;padding:12px 4px;position:relative;}
+  .sq-row:not(:last-child)::before{content:"";position:absolute;left:17px;top:40px;bottom:-6px;width:2px;background:var(--line-2);}
+  .sq-num{width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid var(--brand-soft);color:var(--brand-ink);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;z-index:1;}
+  .sq-row>div{flex:1;min-width:0;font-size:14px;color:var(--ink-2);}
+  .sq-hop{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2,#f7f8fc);border:1px solid var(--line-2);border-radius:999px;padding:3px 9px 3px 3px;margin-bottom:6px;}
+  .sq-arr{color:var(--faint);font-size:13px;line-height:1;}
+  .sq-arr.sq-ret{color:#10b981;}
 </style>
 </head>
 <body>
+<svg style="display:none" aria-hidden="true"><defs>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-web" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-api" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+  <symbol id="i-stt" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></symbol>
+  <symbol id="i-llm" viewBox="0 0 24 24"><rect width="18" height="10" x="3" y="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-ret" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+</defs></svg>
 
 <div class="hero">
   <div class="hero-glow"></div>
@@ -392,6 +420,38 @@ DATABASE_URL=mongodb://localhost:27017/eazyscan?replicaSet=rs0&directConnection=
     <div class="note warn">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
       <div><b>กับดักที่เจอบ่อย</b> — ใส่ key อย่างเดียวไม่พอ ต้องตั้ง <code class="mono">LLM_PROVIDER</code> ให้ตรงด้วย (ไม่งั้น default = <code class="mono">claude-cli</code> แล้วเมิน key) · และ <b>ไม่มี</b>ตัวแปร <code class="mono">CLAUDE_CLI_MODEL</code> (โค้ดไม่อ่าน) — ใช้ <code class="mono">CLAUDE_CLI_FAST_MODEL</code> / <code class="mono">CLAUDE_CLI_DEEP_MODEL</code> แทน</div>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- sequence -->
+  <section>
+    <div class="sec-eyebrow">ระบบทำงานยังไง</div>
+    <h2>ลำดับการทำงาน (Sequence)</h2>
+    <p style="color:var(--muted);font-size:14px;margin-top:4px">อ่านบนลงล่าง — แต่ละขั้นบอกว่า <b>ใคร → ใคร</b> ทำอะไร · งานวิ่งต่อแม้ปิดหน้า · ไม่มี DB ก็ใช้งานได้</p>
+    <div class="sq-legend">
+      <span class="sq-leg"><span class="sq-av sq-user"><svg class="sq-ic"><use href="#i-user"/></svg></span>ผู้ใช้</span>
+      <span class="sq-leg"><span class="sq-av sq-web"><svg class="sq-ic"><use href="#i-web"/></svg></span>Web</span>
+      <span class="sq-leg"><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span>API</span>
+      <span class="sq-leg"><span class="sq-av sq-db"><svg class="sq-ic"><use href="#i-db"/></svg></span>MongoDB</span>
+      <span class="sq-leg"><span class="sq-av sq-stt"><svg class="sq-ic"><use href="#i-stt"/></svg></span>Whisper</span>
+      <span class="sq-leg"><span class="sq-av sq-llm"><svg class="sq-ic"><use href="#i-llm"/></svg></span>LLM</span>
+    </div>
+    <div class="card sq-seq" style="margin-top:12px">
+      <div class="sq-row"><span class="sq-num">1</span><div><span class="sq-hop"><span class="sq-av sq-user"><svg class="sq-ic"><use href="#i-user"/></svg></span><span class="sq-arr"><svg class="sq-ic"><use href="#i-arrow"/></svg></span><span class="sq-av sq-web"><svg class="sq-ic"><use href="#i-web"/></svg></span></span>อัด/อัปโหลดเสียง + เลือกบริการถอดเสียง</div></div>
+      <div class="sq-row"><span class="sq-num">2</span><div><span class="sq-hop"><span class="sq-av sq-web"><svg class="sq-ic"><use href="#i-web"/></svg></span></span>เพิ่มรายการ “กำลังประมวลผล” ลง History ทันที (เห็นแม้ไม่มี DB)</div></div>
+      <div class="sq-row"><span class="sq-num">3</span><div><span class="sq-hop"><span class="sq-av sq-web"><svg class="sq-ic"><use href="#i-web"/></svg></span><span class="sq-arr"><svg class="sq-ic"><use href="#i-arrow"/></svg></span><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span></span>POST เสียง → <code class="mono">/api/analyze</code> (สตรีม NDJSON)</div></div>
+      <div class="sq-row"><span class="sq-num">4</span><div><span class="sq-hop"><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span><span class="sq-arr"><svg class="sq-ic"><use href="#i-arrow"/></svg></span><span class="sq-av sq-db"><svg class="sq-ic"><use href="#i-db"/></svg></span></span>สร้าง record status=processing + ETA → row โผล่ History</div></div>
+      <div class="sq-row"><span class="sq-num">5</span><div><span class="sq-hop"><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span></span>llmPreflight() ไม่มี LLM แจ้งทันที · จองคิว (เกิน limit → เข้าคิว)</div></div>
+      <div class="sq-row"><span class="sq-num">6</span><div><span class="sq-hop"><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span><span class="sq-arr"><svg class="sq-ic"><use href="#i-arrow"/></svg></span><span class="sq-av sq-stt"><svg class="sq-ic"><use href="#i-stt"/></svg></span><span class="sq-arr sq-ret"><svg class="sq-ic"><use href="#i-ret"/></svg></span></span>ถอดเสียงเป็นข้อความ → transcript</div></div>
+      <div class="sq-row"><span class="sq-num">7</span><div><span class="sq-hop"><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span><span class="sq-arr"><svg class="sq-ic"><use href="#i-arrow"/></svg></span><span class="sq-av sq-llm"><svg class="sq-ic"><use href="#i-llm"/></svg></span><span class="sq-arr sq-ret"><svg class="sq-ic"><use href="#i-ret"/></svg></span></span>วิเคราะห์ transcript → ผลลัพธ์ (Zod validate + retry)</div></div>
+      <div class="sq-row"><span class="sq-num">8</span><div><span class="sq-hop"><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span><span class="sq-arr"><svg class="sq-ic"><use href="#i-arrow"/></svg></span><span class="sq-av sq-db"><svg class="sq-ic"><use href="#i-db"/></svg></span></span>อัปเดต status=done + เวลาที่ใช้จริง + ผลวิเคราะห์</div></div>
+      <div class="sq-row"><span class="sq-num">9</span><div><span class="sq-hop"><span class="sq-av sq-api"><svg class="sq-ic"><use href="#i-api"/></svg></span><span class="sq-arr sq-ret"><svg class="sq-ic"><use href="#i-ret"/></svg></span><span class="sq-av sq-web"><svg class="sq-ic"><use href="#i-web"/></svg></span><span class="sq-arr"><svg class="sq-ic"><use href="#i-arrow"/></svg></span><span class="sq-av sq-user"><svg class="sq-ic"><use href="#i-user"/></svg></span></span>ส่ง {result} → เปิด <code class="mono">/results/[id]</code></div></div>
+    </div>
+    <div class="note info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>ดูครบทุก flow (error · re-analyze · export) แบบเต็ม ๆ ที่ <a href="SEQUENCE.html"><b>SEQUENCE.html</b></a></div>
     </div>
   </section>
 

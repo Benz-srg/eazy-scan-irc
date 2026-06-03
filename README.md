@@ -6,6 +6,11 @@
 
 > สร้างตาม Claude Design handoff (EazyScan.html) — ธีม Light, Thai-first, indigo→blue gradient
 
+### 📚 เอกสารเพิ่มเติม
+
+- **การติดตั้ง / Deploy / ภาพรวมระบบ** → เปิด [`GUIDE.html`](GUIDE.html) (คู่มือ visual: รัน Docker คำสั่งเดียวหรือ local, ตั้งค่า `.env` ต่อ provider, แผนภาพ Architecture, แก้ปัญหาที่พบบ่อย)
+- **Sequence Diagram (ลำดับการทำงานทุก flow)** → เปิด [`SEQUENCE.html`](SEQUENCE.html) (วิเคราะห์ · error · re-analyze · export + ภาพรวม Architecture)
+
 ---
 
 ## 🧑‍💻 สำหรับผู้ตรวจ (Reviewer Quick Start)
