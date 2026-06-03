@@ -31,7 +31,16 @@ export function History() {
   const [editVal, setEditVal] = useState("");
   const [menuId, setMenuId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const doDelete = (id: string) => {
+    setItems((arr) => arr.filter((x) => x.id !== id));
+    setConfirmId(null);
+    fetch(`/api/projects/${id}`, { method: "DELETE" })
+      .catch(() => {})
+      .finally(() => invalidate("projects"));
+  };
 
   // SWR: instant paint from cache, revalidate in background + on window focus.
   // DB is the source of truth when it has rows; never wipe client-only history
@@ -517,13 +526,8 @@ export function History() {
                             />
                             <button
                               onClick={() => {
-                                setItems((arr) => arr.filter((x) => x.id !== h.id));
                                 setMenuId(null);
-                                fetch(`/api/projects/${h.id}`, {
-                                  method: "DELETE",
-                                })
-                                  .catch(() => {})
-                                  .finally(() => invalidate("projects"));
+                                setConfirmId(h.id);
                               }}
                               style={{
                                 display: "flex",
@@ -550,6 +554,70 @@ export function History() {
           )}
         </div>
       </div>
+
+      {confirmId && (
+        <div
+          onClick={() => setConfirmId(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(23,23,40,.42)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: "var(--z-modal)" as unknown as number,
+            padding: 20,
+            animation: "fadeIn .2s",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="ยืนยันการลบ"
+            style={{
+              background: "var(--surface)",
+              borderRadius: "var(--r-xl)",
+              padding: 26,
+              width: "100%",
+              maxWidth: 400,
+              boxShadow: "var(--sh-lg)",
+              textAlign: "center",
+              animation: "pop .35s cubic-bezier(.2,.8,.3,1) both",
+            }}
+          >
+            <div
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: 16,
+                background: "var(--rose-soft)",
+                color: "var(--rose)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 14px",
+              }}
+            >
+              <Icon name="trash-2" size={28} />
+            </div>
+            <h3 style={{ fontSize: 19, fontWeight: 800 }}>ลบประวัติการวิเคราะห์?</h3>
+            <p style={{ fontSize: 14, color: "var(--muted)", marginTop: 8, lineHeight: 1.6 }}>
+              ลบ “<b>{items.find((x) => x.id === confirmId)?.title ?? "รายการนี้"}</b>”
+              ออกถาวร — กู้คืนไม่ได้
+            </p>
+            <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+              <Btn variant="ghost" onClick={() => setConfirmId(null)} style={{ flex: 1, justifyContent: "center" }}>
+                ยกเลิก
+              </Btn>
+              <Btn variant="danger" icon="trash-2" onClick={() => doDelete(confirmId)} style={{ flex: 1, justifyContent: "center" }}>
+                ลบถาวร
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
