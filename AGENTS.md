@@ -36,7 +36,9 @@ AI Manday Estimator. Built faithfully from a Claude Design handoff (EazyScan.htm
 - `analyze.ts` dispatches on `LLM_PROVIDER`: `claude-cli` (default, host login, no key) ·
   `anthropic` · `gemini` · `openai` (all via AI SDK `generateObject`).
 - Claude CLI (`analyze-claude.ts`) shells `claude -p --output-format json`, extracts the JSON
-  from `result`, then validates with Zod. It CANNOT run inside Docker (host auth) — Docker uses OpenAI.
+  from `result`, then validates with Zod. Docker defaults to an API key, not the CLI: the binary runs
+  fine in a container, but the host login doesn't transfer cleanly (often in the macOS Keychain).
+  Installing the CLI in the image + mounting `~/.claude` (or `claude` login inside the container) enables it.
 - Auto-fallback: an API provider with no key, on a host that has the Claude CLI, uses the CLI.
 - Depth is server-side (default `fast`; the UI exposes only STT choice): `fast`
   (Haiku/Flash/4o-mini) vs `deep` (Sonnet/Pro/4o), per-provider models via env. Same prompt+schema.

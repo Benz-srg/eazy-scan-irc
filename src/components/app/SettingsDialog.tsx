@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
 import { Icon, Btn } from "@/components/ui/primitives";
+import { OpenAI } from "@/components/ui/logos";
 import { apiKeyAtom, providerAtom, maskApiKey } from "@/lib/atoms";
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
@@ -100,7 +101,11 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                   transition: "all .15s",
                 }}
               >
-                <Icon name={o.icon} size={18} style={{ color: "var(--brand-ink)" }} />
+                {o.id === "openai" ? (
+                  <OpenAI style={{ width: 18, height: 18, color: "var(--brand-ink)" }} />
+                ) : (
+                  <Icon name={o.icon} size={18} style={{ color: "var(--brand-ink)" }} />
+                )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{o.t}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>{o.d}</div>

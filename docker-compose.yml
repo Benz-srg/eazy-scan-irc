@@ -55,7 +55,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # analysis engine — default OpenAI (Claude CLI can't run in a container).
+      # analysis engine — default OpenAI. Claude CLI *can* run in a container,
+      # but the host login doesn't transfer in cleanly (often macOS Keychain),
+      # so Docker uses an API key by default.
       # set LLM_PROVIDER=anthropic|gemini|openai in .env + the matching key below.
       LLM_PROVIDER: ${LLM_PROVIDER:-openai}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

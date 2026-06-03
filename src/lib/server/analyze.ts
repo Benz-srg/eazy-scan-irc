@@ -31,6 +31,54 @@ function hasKey(provider: string, opts: AnalyzeOpts): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
 
+/** Raised when the LLM is not configured or cannot be reached. */
+export class LlmUnavailableError extends Error {
+  constructor(
+    message: string,
+    public detail?: string,
+  ) {
+    super(message);
+    this.name = "LlmUnavailableError";
+  }
+}
+
+function resolveProvider(opts: AnalyzeOpts): string {
+  return (opts.provider || process.env.LLM_PROVIDER || "claude-cli").toLowerCase();
+}
+
+const hintFor = (provider: string) =>
+  provider === "claude-cli"
+    ? "ตรวจสอบ: ติดตั้ง Claude CLI แล้วล็อกอิน (claude) — หรือใส่ API key (ANTHROPIC/OPENAI/GEMINI) ใน .env แล้วตั้ง LLM_PROVIDER"
+    : `ตรวจสอบ: API key ของ ${provider} ใน .env และการเชื่อมต่ออินเทอร์เน็ต`;
+
+/**
+ * Cheap config check used BEFORE running STT, so the user is told immediately
+ * (instead of waiting through transcription) when no LLM is wired up. Returns
+ * null when OK, or a ready-to-show message. Can't catch runtime auth/network
+ * failures — those are classified by llmError() after the call.
+ */
+export function llmPreflight(opts: AnalyzeOpts = {}): string | null {
+  const provider = resolveProvider(opts);
+  const ok =
+    provider === "claude-cli"
+      ? claudeCliAvailable()
+      : hasKey(provider, opts) || claudeCliAvailable();
+  if (ok) return null;
+  return `ยังไม่ได้ตั้งค่าเครื่องมือวิเคราะห์ AI (LLM) — ${hintFor(provider)}`;
+}
+
+/** Turn a raw provider/CLI failure into a clear, actionable Thai message. */
+function llmError(provider: string, err: unknown): LlmUnavailableError {
+  const detail = err instanceof Error ? err.message : String(err);
+  const notConfigured =
+    /missing .*_API_KEY/i.test(detail) ||
+    /ENOENT|not found|command not found|ไม่ได้ตั้งค่า/i.test(detail);
+  const base = notConfigured
+    ? "ยังไม่ได้ตั้งค่าเครื่องมือวิเคราะห์ AI (LLM)"
+    : "เชื่อมต่อเครื่องมือวิเคราะห์ AI (LLM) ไม่สำเร็จ";
+  return new LlmUnavailableError(`${base} — ${hintFor(provider)}`, detail);
+}
+
 export type AnalyzeOpts = {
   apiKey?: string;
   depth?: Depth;
@@ -117,31 +165,32 @@ export async function analyzeTranscript(
   transcript: string,
   opts: AnalyzeOpts = {},
 ): Promise<Analysis> {
-  const provider = (
-    opts.provider ||
-    process.env.LLM_PROVIDER ||
-    "claude-cli"
-  ).toLowerCase();
+  const provider = resolveProvider(opts);
   const depth: Depth = opts.depth ?? "fast";
   const deep = depth === "deep";
 
-  // Auto-fallback: an API provider was chosen but has no key — if the local
-  // Claude Code CLI is available, use it (free, host login) instead of failing.
-  // (In Docker the CLI isn't present, so this correctly does not trigger.)
-  if (provider !== "claude-cli" && !hasKey(provider, opts) && claudeCliAvailable()) {
-    console.log(
-      `[analyze] LLM provider=${provider} no key → fallback claude-cli · depth=${depth} · model=${modelForDepth(depth)}`,
-    );
-    return analyzeWithClaudeCli(transcript, depth);
-  }
+  try {
+    // Auto-fallback: an API provider was chosen but has no key — if the local
+    // Claude Code CLI is available, use it (free, host login) instead of failing.
+    // (In Docker the CLI isn't present, so this correctly does not trigger.)
+    if (provider !== "claude-cli" && !hasKey(provider, opts) && claudeCliAvailable()) {
+      console.log(
+        `[analyze] LLM provider=${provider} no key → fallback claude-cli · depth=${depth} · model=${modelForDepth(depth)}`,
+      );
+      return await analyzeWithClaudeCli(transcript, depth);
+    }
 
-  if (provider === "claude-cli") {
-    console.log(
-      `[analyze] LLM provider=claude-cli · depth=${depth} · model=${modelForDepth(depth)}`,
-    );
-    return analyzeWithClaudeCli(transcript, depth);
+    if (provider === "claude-cli") {
+      console.log(
+        `[analyze] LLM provider=claude-cli · depth=${depth} · model=${modelForDepth(depth)}`,
+      );
+      return await analyzeWithClaudeCli(transcript, depth);
+    }
+    const { model, id } = resolveSdkModel(provider, opts, deep);
+    console.log(`[analyze] LLM provider=${provider} · depth=${depth} · model=${id}`);
+    return await analyzeWithSdk(model, transcript);
+  } catch (err) {
+    console.error(`[analyze] LLM failed (provider=${provider}):`, err);
+    throw llmError(provider, err);
   }
-  const { model, id } = resolveSdkModel(provider, opts, deep);
-  console.log(`[analyze] LLM provider=${provider} · depth=${depth} · model=${id}`);
-  return analyzeWithSdk(model, transcript);
 }

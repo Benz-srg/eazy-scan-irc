@@ -1,5 +1,5 @@
 import { transcribe } from "@/lib/server/transcribe";
-import { analyzeTranscript } from "@/lib/server/analyze";
+import { analyzeTranscript, llmPreflight } from "@/lib/server/analyze";
 import { saveAudio } from "@/lib/server/storage";
 import { getDb } from "@/lib/server/db";
 import { acquireSlot, slots, QueueFullError } from "@/lib/server/concurrency";
@@ -114,6 +114,18 @@ export async function POST(req: Request) {
         send({ type: "job", id: jobId, audioUrl: stored.url });
         send({ type: "stage", key: "upload", state: "done", ms: 0 });
 
+        // 1a. preflight the LLM up front — if it's not wired up, tell the user
+        // now instead of after a minute of transcription.
+        const llmProvider = (process.env.LLM_PROVIDER || "claude-cli").toLowerCase();
+        const llmApiKey = llmProvider === "openai" ? apiKey : undefined;
+        const llmIssue = llmPreflight({ apiKey: llmApiKey });
+        if (llmIssue) {
+          await markError(llmIssue);
+          fail(llmIssue);
+          controller.close();
+          return;
+        }
+
         // 1b. wait for a compute slot so concurrent uploads can't peg the host.
         // The row already exists as "processing", so a queued job still shows in
         // History; queued jobs are not cancelled if the client leaves.
@@ -157,12 +169,8 @@ export async function POST(req: Request) {
           preview: transcript.slice(0, 160),
         });
 
-        // 3. analyze (LLM)
-        // the user-supplied apiKey is an OpenAI STT key — only forward it to the
-        // analyzer when the LLM provider is also OpenAI, else it overrides the
-        // provider's own env key and breaks auth.
-        const llmProvider = (process.env.LLM_PROVIDER || "claude-cli").toLowerCase();
-        const llmApiKey = llmProvider === "openai" ? apiKey : undefined;
+        // 3. analyze (LLM) — llmApiKey computed in the preflight above (the
+        // OpenAI STT key is only forwarded when the LLM provider is OpenAI too).
         send({ type: "stage", key: "analyze", state: "start" });
         const tLlm = Date.now();
         let analysis;

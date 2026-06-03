@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon, Btn, Card, Tag } from "@/components/ui/primitives";
+import { OpenAI } from "@/components/ui/logos";
 import { TopBar } from "@/components/app/AppShell";
 import { useAtom, useSetAtom } from "jotai";
 import { useRecorder } from "@/lib/useRecorder";
@@ -624,7 +625,11 @@ export function Workspace() {
                             flex: "none",
                           }}
                         >
-                          <Icon name={o.icon} size={18} />
+                          {o.id === "openai" ? (
+                            <OpenAI style={{ width: 18, height: 18 }} />
+                          ) : (
+                            <Icon name={o.icon} size={18} />
+                          )}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 14.5, fontWeight: 700 }}>{o.t}</div>

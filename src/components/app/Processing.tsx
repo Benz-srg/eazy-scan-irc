@@ -220,11 +220,13 @@ export function Processing() {
   const pct = Math.round((doneCount / STAGES.length) * 100);
   const C = 2 * Math.PI * 42;
 
+  const isLlmError = !!error && /LLM/.test(error);
+
   if (error) {
     return (
       <>
         <TopBar
-          title="วิเคราะห์ไม่สำเร็จ"
+          title={isLlmError ? "เชื่อมต่อ AI วิเคราะห์ไม่ได้" : "วิเคราะห์ไม่สำเร็จ"}
           sub={audioName}
           right={
             <Tag color="var(--rose)" bg="var(--rose-soft)" icon="triangle-alert">
@@ -249,10 +251,13 @@ export function Processing() {
             >
               <Icon name="triangle-alert" size={34} />
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 800 }}>วิเคราะห์ไม่สำเร็จ</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800 }}>
+              {isLlmError ? "เชื่อมต่อ AI วิเคราะห์ไม่ได้" : "วิเคราะห์ไม่สำเร็จ"}
+            </h2>
             <p style={{ fontSize: 15, color: "var(--muted)", marginTop: 8, lineHeight: 1.65 }}>
-              ระบบถอดเสียง/วิเคราะห์มีปัญหา จึงยังไม่ได้ผลลัพธ์จริง
-              (ระบบจะไม่แสดงข้อมูลตัวอย่างแทน เพื่อไม่ให้เข้าใจผิด)
+              {isLlmError
+                ? "ระบบถอดเสียงสำเร็จ แต่เชื่อมต่อเครื่องมือวิเคราะห์ AI (LLM) ไม่ได้ จึงยังไม่ได้ผลลัพธ์"
+                : "ระบบถอดเสียง/วิเคราะห์มีปัญหา จึงยังไม่ได้ผลลัพธ์จริง (ระบบจะไม่แสดงข้อมูลตัวอย่างแทน เพื่อไม่ให้เข้าใจผิด)"}
             </p>
             <div
               className="mono"

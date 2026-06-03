@@ -52,7 +52,7 @@ curl -s -X POST http://localhost:3000/api/reanalyze \
 
 > **ฟรีไม่มี key ได้จริง** ถ้าเครื่องมี Claude Code CLI (ล็อกอินแล้ว) → ใช้ **แบบ B**:
 > LLM = Claude CLI (ฟรี) · STT = Local Whisper (ฟรี) · ไม่แตะ OpenAI เลย
-> *(Docker ใช้ทางนี้ไม่ได้ — Claude CLI รันใน container ไม่ได้ ต้องรัน local)*
+> *(Docker default ใช้ API key — host login ของ Claude CLI ไม่ย้ายเข้า container ง่ายๆ (มักอยู่ใน macOS Keychain); อยากใช้ CLI ฟรี → รันแบบ B หรือ mount `~/.claude` เข้า container)*
 
 ต้องมี **Docker Desktop** อย่างเดียว (แบบ A) หรือ **Node 20+ / pnpm** (แบบ B/C)
 
@@ -69,7 +69,7 @@ docker compose up --build
 (ครั้งแรก Whisper โหลด model ~3GB รอสักครู่)
 
 - ใช้ key อื่นได้: ตั้ง `LLM_PROVIDER=anthropic` + `ANTHROPIC_API_KEY=...` (หรือ `gemini` + `GEMINI_API_KEY`) ใน `.env`
-- Docker วิเคราะห์ด้วย API key เพราะ Claude Code CLI รันใน container ไม่ได้ (ถ้าอยากใช้ฟรีแบบไม่มี key → แบบ B)
+- Docker วิเคราะห์ด้วย API key เป็น default — host login ของ Claude CLI ไม่ portable เข้า container (มักอยู่ใน macOS Keychain); อยากใช้ CLI ฟรีไม่มี key → แบบ B หรือ mount `~/.claude` เข้า container
 
 ### แบบ B — Local dev (ไม่ต้องมี API key ถ้ามี Claude Code CLI)
 
