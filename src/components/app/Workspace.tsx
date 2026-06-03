@@ -108,9 +108,11 @@ export function Workspace() {
 
   const stage = rec.status;
 
-  // show the entry field when no key is saved yet
+  // mirror the shared key atom: show the masked saved key when one exists
+  // (incl. when it was saved from Settings), the entry field when it doesn't.
+  // Two-way sync so this page never gets stuck on an empty input.
   useEffect(() => {
-    if (!savedKey) setEditingKey(true);
+    setEditingKey(!savedKey);
   }, [savedKey]);
 
   const commitKey = () => {
