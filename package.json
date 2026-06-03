@@ -7,7 +7,7 @@
     "dev": "next dev",
     "dev:all": "concurrently -n web,whisper -c blue,magenta \"next dev\" \"pnpm whisper\"",
     "whisper": "cd python && ./.venv/bin/uvicorn main:app --port 8000",
-    "whisper:setup": "cd python && python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt",
+    "whisper:setup": "cd python && PY=$(command -v python3.12 || command -v python3.11 || command -v python3) && echo \"using $PY\" && \"$PY\" -m venv .venv && ./.venv/bin/pip install -U pip && ./.venv/bin/pip install -r requirements.txt",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

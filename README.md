@@ -15,13 +15,21 @@
 
 ## 🧑‍💻 สำหรับผู้ตรวจ (Reviewer Quick Start)
 
-ทดสอบทั้งระบบใน ~3 นาที ด้วย **OpenAI key ตัวเดียว** (ใช้ทั้งถอดเสียงและวิเคราะห์):
+**อยากดูเร็วสุด (0 setup, ไม่ต้องมี key/Docker)** — ดูผลวิเคราะห์ตัวอย่างเต็มรูปแบบ:
 
 ```bash
-git clone https://github.com/Benz-srg/eazy-scan-irc.git
-cd eazy-scan-irc
-cp .env.example .env          # ใส่ OPENAI_API_KEY=sk-... ในไฟล์ .env
-docker compose up --build     # web + Whisper + MongoDB
+git clone https://github.com/Benz-srg/eazy-scan-irc.git && cd eazy-scan-irc
+pnpm install && pnpm dev
+```
+เปิด **http://localhost:3000** → กด **"ดูตัวอย่าง"** (หรือเข้า `/results/sample` ตรง ๆ) — เห็น SOW, ตาราง Manday, ความเสี่ยง ครบ โดยไม่ต้องตั้งค่าอะไร
+
+---
+
+**ทดสอบทั้งระบบจริง (upload เสียง → ผลลัพธ์)** ใน ~3 นาที ด้วย **OpenAI key ตัวเดียว** (ใช้ทั้งถอดเสียงและวิเคราะห์):
+
+```bash
+cp .env.example .env          # ใส่ OPENAI_API_KEY=sk-... และ LLM_PROVIDER=openai
+docker compose up --build     # web + Whisper + MongoDB (Python ใน image คงที่ ไม่ต้องลงเอง)
 ```
 
 เปิด **http://localhost:3000** → กด **"เริ่มใช้งานฟรี"** → ที่หน้า Workspace
